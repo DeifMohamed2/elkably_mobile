@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "13795074512",
+    "project_id": "shoalatelnour",
+    "storage_bucket": "shoalatelnour.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:13795074512:android:d98e0a5bf58744893599d5",
+        "android_client_info": {
+          "package_name": "com.sho3latelnour.madrasty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_9VSqBylZYukpg6SXa-P4CEHXV2Ods_4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
