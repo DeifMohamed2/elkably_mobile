@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "13795074512",
-    "project_id": "shoalatelnour",
-    "storage_bucket": "shoalatelnour.firebasestorage.app"
+    "project_number": "589540797608",
+    "project_id": "elkablymobile",
+    "storage_bucket": "elkablymobile.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:13795074512:android:d98e0a5bf58744893599d5",
+        "mobilesdk_app_id": "1:589540797608:android:0748f6fcc3378d88a1269d",
         "android_client_info": {
-          "package_name": "com.sho3latelnour.madrasty"
+          "package_name": "com.elkably.mobile"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB_9VSqBylZYukpg6SXa-P4CEHXV2Ods_4"
+          "current_key": "AIzaSyCjrHJnB5YMgksGUnE3pn5l3GNTo4f-Oz4"
         }
       ],
       "services": {

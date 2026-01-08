@@ -1,6 +1,28 @@
 import '../models/models.dart';
 
-// Mock Student Data
+// Mock Students Data
+const List<Student> mockStudents = [
+  Student(
+    id: '1',
+    name: 'Ahmed Hassan',
+    grade: 'Grade 10',
+    studentClass: 'Class A',
+  ),
+  Student(
+    id: '2',
+    name: 'Sara Hassan',
+    grade: 'Grade 8',
+    studentClass: 'Class B',
+  ),
+  Student(
+    id: '3',
+    name: 'Omar Hassan',
+    grade: 'Grade 6',
+    studentClass: 'Class C',
+  ),
+];
+
+// Mock Student Data (for backwards compatibility)
 const Student mockStudent = Student(
   id: '1',
   name: 'Ahmed Hassan',
@@ -199,7 +221,8 @@ const List<AppNotification> mockNotifications = [
     type: NotificationType.attendance,
     title: 'Absence Alert',
     description: 'Your child was absent today. Please contact the school office.',
-    teacherName: 'Ms. Sarah Ahmed',
+    studentName: 'Ahmed Hassan',
+    studentCode: 'K1234',
     date: '2025-12-20T09:30:00',
     isNew: true,
   ),
@@ -208,7 +231,8 @@ const List<AppNotification> mockNotifications = [
     type: NotificationType.assignment,
     title: 'New Assignment Posted',
     description: 'Physics Lab Report has been assigned. Due date: December 23.',
-    teacherName: 'Dr. Mohamed Ali',
+    studentName: 'Ahmed Hassan',
+    studentCode: 'K1234',
     date: '2025-12-19T14:20:00',
     isNew: true,
   ),
@@ -217,7 +241,8 @@ const List<AppNotification> mockNotifications = [
     type: NotificationType.grade,
     title: 'Midterm Results Published',
     description: 'Mathematics midterm exam results are now available.',
-    teacherName: 'Mr. Khaled Hassan',
+    studentName: 'Ahmed Hassan',
+    studentCode: 'K1234',
     date: '2025-12-18T11:00:00',
     isNew: false,
   ),
@@ -234,7 +259,8 @@ const List<AppNotification> mockNotifications = [
     type: NotificationType.message,
     title: 'Parent-Teacher Meeting',
     description: 'Scheduled for December 28 at 10:00 AM.',
-    teacherName: 'Ms. Fatima Ibrahim',
+    studentName: 'Sara Hassan',
+    studentCode: 'K5678',
     date: '2025-12-16T16:45:00',
     isNew: false,
   ),
@@ -251,7 +277,8 @@ const List<AppNotification> mockNotifications = [
     type: NotificationType.assignment,
     title: 'English Essay Submitted',
     description: 'Your child submitted the Climate Change essay.',
-    teacherName: 'Ms. Layla Mohamed',
+    studentName: 'Ahmed Hassan',
+    studentCode: 'K1234',
     date: '2025-12-14T15:30:00',
     isNew: false,
   ),

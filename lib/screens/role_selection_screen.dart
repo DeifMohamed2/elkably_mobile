@@ -9,206 +9,207 @@ class RoleSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.cardBackground : AppColors.cardBackgroundLight;
+    final textColor = isDark ? Colors.white : AppColors.textPrimaryLight;
+
     return Scaffold(
-      backgroundColor: AppColors.surfaceBackground,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-          child: Column(
-            children: [
-              // Top Section - Logo and Title
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo
-                    Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        gradient: AppGradients.primaryGradient,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.elkablyRed.withValues(alpha: 0.3),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
+      body: Stack(
+        children: [
+          // Top Red Gradient Background
+          Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFFE53935), // red-600
+                  Color(0xFFEF5350), // red-500
+                  Color(0xFFD32F2F), // red-700
+                ],
+              ),
+            ),
+          ),
+          // Content
+          SafeArea(
+            child: Column(
+              children: [
+                // Top Section with Logo
+                Expanded(
+                  flex: 4,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Logo
+                        Container(
+                          width: 120,
+                          height: 120,
+                          padding: const EdgeInsets.all(20),
+                          child: Image.asset(
+                            'assets/images/logo-white-.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        //const SizedBox(height: 16),
+                        // School Name
+                        const Text(
+                          'Elkably',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        
+                      ],
+                    ),
+                  ),
+                ),
+                // Bottom White Card Section
+                Expanded(
+                  flex: 6,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 16),
+                          // Parent Button
+                          _RoleCard(
+                            title: 'Parent',
+                            subtitle: 'Track your child\'s progress',
+                            icon: Icons.people_outline,
+                            onTap: () => onSelectRole(UserRole.parent),
+                            textColor: textColor,
+                          ),
+                          const SizedBox(height: 20),
+                          // Student Button
+                          _RoleCard(
+                            title: 'Student',
+                            subtitle: 'View your academic progress',
+                            icon: Icons.school_outlined,
+                            onTap: () => onSelectRole(UserRole.student),
+                            textColor: textColor,
+                          ),
+                          const Spacer(),
+                          // Footer
+                          Center(
+                            child: Text(
+                              '© 2024 Elkably. All rights reserved',
+                              style: TextStyle(
+                                color: isDark ? AppColors.textMuted : Colors.grey[500],
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.school,
-                        size: 64,
-                        color: Colors.white,
-                      ),
                     ),
-                    const SizedBox(height: 32),
-
-                    // App Name
-                    const Text(
-                      'ELKABLY',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 4,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Tagline
-                    const Text(
-                      'Welcome to Elkably',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Subtitle
-                    const Text(
-                      'Platform for following up on students\' affairs',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 48),
-
-                    // Role Selection Buttons
-                    _RoleButton(
-                      title: 'Parent Portal',
-                      subtitle: 'Track your child\'s progress',
-                      icon: Icons.people,
-                      isPrimary: true,
-                      onTap: () => onSelectRole(UserRole.parent),
-                    ),
-                    const SizedBox(height: 16),
-                    _RoleButton(
-                      title: 'Student Portal',
-                      subtitle: 'View your academic progress',
-                      icon: Icons.school,
-                      isPrimary: false,
-                      onTap: () => onSelectRole(UserRole.student),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-
-              // Footer
-              const Text(
-                'ELKABLY. All rights reserved 2024 ©',
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class _RoleButton extends StatelessWidget {
+class _RoleCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final bool isPrimary;
   final VoidCallback onTap;
+  final Color textColor;
 
-  const _RoleButton({
+  const _RoleCard({
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.isPrimary,
     required this.onTap,
+    required this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBgColor = isDark ? AppColors.cardBackground : Colors.grey[100];
+    final borderColor = isDark ? AppColors.borderLight : Colors.grey[300];
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
-          width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: isPrimary ? AppGradients.primaryGradient : null,
-            color: isPrimary ? null : AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-            border: isPrimary
-                ? null
-                : Border.all(color: AppColors.borderLight, width: 2),
-            boxShadow: isPrimary
-                ? [
-                    BoxShadow(
-                      color: AppColors.elkablyRed.withValues(alpha: 0.3),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
+            color: cardBgColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: borderColor!,
+              width: 2,
+            ),
           ),
           child: Row(
             children: [
-              // Icon Container
+              // Icon
               Container(
-                width: 56,
-                height: 56,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
-                  color: isPrimary
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : AppColors.elkablyRed.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.elkablyRed.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   icon,
                   size: 32,
-                  color: isPrimary ? Colors.white : AppColors.elkablyRed,
+                  color: AppColors.elkablyRed,
                 ),
               ),
-              const SizedBox(width: 16),
-
-              // Text Content
+              const SizedBox(width: 20),
+              // Text
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: isPrimary
-                            ? Colors.white.withValues(alpha: 0.8)
-                            : AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.textSecondary
+                            : Colors.grey[600],
                         fontSize: 14,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Arrow Icon
+              // Arrow
               Icon(
                 Icons.arrow_forward_ios,
                 size: 20,
-                color: isPrimary
-                    ? Colors.white.withValues(alpha: 0.8)
-                    : AppColors.textSecondary,
+                color: AppColors.elkablyRed,
               ),
             ],
           ),

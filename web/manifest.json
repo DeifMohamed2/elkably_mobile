@@ -3,7 +3,7 @@
     "short_name": "elkably_mobile",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#d8d8d8",
+    "background_color": "#1d1d1d",
     "theme_color": "#0175C2",
     "description": "A new Flutter project.",
     "orientation": "portrait-primary",

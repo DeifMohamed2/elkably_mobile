@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../providers/app_providers.dart';
 
@@ -46,18 +47,12 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               Text(
                 'Are you sure you want to delete your account?',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 16),
               ),
               SizedBox(height: 16),
               Text(
                 'This action cannot be undone. All your data will be permanently deleted, including:',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
               SizedBox(height: 12),
               _DeleteWarningItem(text: 'Your profile information'),
@@ -71,10 +66,7 @@ class ProfileScreen extends ConsumerWidget {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(
                 'Cancel',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
               ),
             ),
             ElevatedButton(
@@ -99,7 +91,7 @@ class ProfileScreen extends ConsumerWidget {
 
   void _showDeleteConfirmationDialog(BuildContext context) {
     final TextEditingController confirmController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -122,10 +114,7 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               const Text(
                 'Type "DELETE" to confirm account deletion:',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -157,10 +146,7 @@ class ProfileScreen extends ConsumerWidget {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(
                 'Cancel',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
               ),
             ),
             ElevatedButton(
@@ -213,10 +199,7 @@ class ProfileScreen extends ConsumerWidget {
               SizedBox(height: 16),
               Text(
                 'Deleting your account...',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
           ),
@@ -227,16 +210,14 @@ class ProfileScreen extends ConsumerWidget {
     // Simulate API call for account deletion
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.of(context).pop(); // Close loading dialog
-      
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Your account has been deleted successfully'),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
 
@@ -247,379 +228,446 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final student = ref.watch(studentProvider);
+    final students = ref.watch(studentsProvider);
+    final isDarkMode = ref.watch(isDarkModeProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceBackground,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: AppGradients.headerGradient,
+      backgroundColor:
+          isDarkMode
+              ? AppColors.surfaceBackground
+              : AppColors.surfaceBackgroundLight,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.elkablyRed,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
                 ),
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Profile',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500,
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                  child: Column(
+                    children: [
+                      const Center(
+                        child: Text(
+                          'Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // Parent Info Card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.borderLight),
+                      // Parent Info Card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(
+                            alpha: isDarkMode ? 0.1 : 0.2,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color:
+                                    isDarkMode
+                                        ? AppColors.elkablyRed
+                                        : Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.person_outline,
+                                size: 32,
+                                color:
+                                    isDarkMode
+                                        ? Colors.white
+                                        : AppColors.elkablyRed,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Parent',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 64,
-                            height: 64,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+
+                  // Linked Students Section
+                  Text(
+                    'Linked Students',
+                    style: TextStyle(
+                      color:
+                          isDarkMode
+                              ? Colors.white
+                              : AppColors.textPrimaryLight,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Display all students
+                  ...students
+                      .map(
+                        (student) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              gradient: AppGradients.primaryGradient,
-                              shape: BoxShape.circle,
+                              color:
+                                  isDarkMode
+                                      ? AppColors.cardBackground
+                                      : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.elkablyRed.withValues(alpha: 0.2),
-                                  blurRadius: 16,
+                                  color: Colors.black.withValues(
+                                    alpha: isDarkMode ? 0.2 : 0.06,
+                                  ),
+                                  blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
-                            child: const Icon(
-                              Icons.person,
-                              size: 32,
-                              color: Colors.white,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isDarkMode
+                                            ? null
+                                            : AppColors.iconBackgroundLight,
+                                    gradient:
+                                        isDarkMode
+                                            ? const LinearGradient(
+                                              colors: [
+                                                Color(0xFF3B82F6),
+                                                Color(0xFFA855F7),
+                                              ],
+                                            )
+                                            : null,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      student.name[0],
+                                      style: TextStyle(
+                                        color:
+                                            isDarkMode
+                                                ? Colors.white
+                                                : AppColors.elkablyRed,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        student.name,
+                                        style: TextStyle(
+                                          color:
+                                              isDarkMode
+                                                  ? Colors.white
+                                                  : AppColors.textPrimaryLight,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${student.grade} • ${student.studentClass}',
+                                        style: TextStyle(
+                                          color:
+                                              isDarkMode
+                                                  ? AppColors.textSecondary
+                                                  : AppColors
+                                                      .textSecondaryLight,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        ),
+                      )
+                      .toList(),
+                  const SizedBox(height: 24),
+
+                  // Settings Section
+                  Text(
+                    'Settings',
+                    style: TextStyle(
+                      color:
+                          isDarkMode
+                              ? Colors.white
+                              : AppColors.textPrimaryLight,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color:
+                          isDarkMode ? AppColors.cardBackground : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: isDarkMode ? 0.2 : 0.06,
+                          ),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _ThemeToggleItem(ref: ref),
+                        Divider(
+                          height: 1,
+                          color:
+                              isDarkMode
+                                  ? AppColors.borderLight
+                                  : AppColors.borderLightTheme,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
                             children: [
-                              Text(
-                                'Parent Account',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
+                              Icon(
+                                Icons.language_outlined,
+                                color:
+                                    isDarkMode
+                                        ? AppColors.textSecondary
+                                        : AppColors.textSecondaryLight,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  'Language',
+                                  style: TextStyle(
+                                    color:
+                                        isDarkMode
+                                            ? Colors.white
+                                            : AppColors.textPrimaryLight,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 4),
                               Text(
-                                'parent@elkably.com',
+                                'English',
                                 style: TextStyle(
-                                  color: AppColors.textSecondary,
+                                  color:
+                                      isDarkMode
+                                          ? AppColors.textSecondary
+                                          : AppColors.textSecondaryLight,
                                   fontSize: 14,
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                        Divider(
+                          height: 1,
+                          color:
+                              isDarkMode
+                                  ? AppColors.borderLight
+                                  : AppColors.borderLightTheme,
+                        ),
+                        _SettingsItem(
+                          icon: Icons.privacy_tip_outlined,
+                          label: 'Privacy Policy',
+                          onTap: () async {
+                            final Uri url = Uri.parse(
+                              'https://mobile-privacy-policiy-elkably.onrender.com',
+                            );
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Logout Button
+                  GestureDetector(
+                    onTap: onLogout,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.elkablyRed.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.elkablyRed.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.logout_outlined,
+                            color: AppColors.elkablyRed,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Logout',
+                            style: TextStyle(
+                              color: AppColors.elkablyRed,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                  const SizedBox(height: 16),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-
-                    // Linked Students Section
-                    const Text(
-                      'Linked Students',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
+                  // Delete Account Button
+                  GestureDetector(
+                    onTap: () => _showDeleteAccountDialog(context),
+                    child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
+                        color: Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.borderLight),
+                        border: Border.all(
+                          color: (isDarkMode
+                                  ? AppColors.textMuted
+                                  : AppColors.textMutedLight)
+                              .withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF3B82F6), Color(0xFFA855F7)],
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                student.name[0],
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
+                          Icon(
+                            Icons.delete_forever_outlined,
+                            color:
+                                isDarkMode
+                                    ? AppColors.textMuted
+                                    : AppColors.textMutedLight,
+                            size: 20,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  student.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Text(
-                                  '${student.grade} • ${student.studentClass}',
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right,
-                            color: AppColors.textSecondary,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Quick Actions Section
-                    const Text(
-                      'Quick Actions',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _ActionButton(
-                      icon: Icons.assignment,
-                      iconColor: AppColors.info,
-                      label: 'View Assignments',
-                      onTap: () => onNavigate('assignments'),
-                    ),
-                    const SizedBox(height: 12),
-                    _ActionButton(
-                      icon: Icons.payment,
-                      iconColor: AppColors.warning,
-                      label: 'Payment History',
-                      onTap: () => onNavigate('fees'),
-                    ),
-                    const SizedBox(height: 12),
-                    _ActionButton(
-                      icon: Icons.grade,
-                      iconColor: AppColors.success,
-                      label: 'View Grades',
-                      onTap: () => onNavigate('grades'),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Settings Section
-                    const Text(
-                      'Settings',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.borderLight),
-                      ),
-                      child: Column(
-                        children: [
-                          _SettingsItem(
-                            icon: Icons.lock,
-                            label: 'Change Password',
-                            onTap: () {},
-                          ),
-                          const Divider(
-                            height: 1,
-                            color: AppColors.borderLight,
-                          ),
-                          _SettingsItem(
-                            icon: Icons.notifications,
-                            label: 'Notifications',
-                            onTap: () {},
-                          ),
-                          const Divider(
-                            height: 1,
-                            color: AppColors.borderLight,
-                          ),
-                          _SettingsItem(
-                            icon: Icons.language,
-                            label: 'Language',
-                            trailing: const Text(
-                              'English',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 14,
-                              ),
-                            ),
-                            onTap: () {},
-                          ),
-                          const Divider(
-                            height: 1,
-                            color: AppColors.borderLight,
-                          ),
-                          _SettingsItem(
-                            icon: Icons.privacy_tip,
-                            label: 'Privacy Policy',
-                            onTap: () {
-                              // TODO: Open privacy policy URL
-                            },
-                          ),
-                          const Divider(
-                            height: 1,
-                            color: AppColors.borderLight,
-                          ),
-                          _SettingsItem(
-                            icon: Icons.description,
-                            label: 'Terms of Service',
-                            onTap: () {
-                              // TODO: Open terms of service URL
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Logout Button
-                    GestureDetector(
-                      onTap: onLogout,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.elkablyRed.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.elkablyRed.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.logout,
-                              color: AppColors.elkablyRed,
-                              size: 20,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Logout',
-                              style: TextStyle(
-                                color: AppColors.elkablyRed,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Delete Account Button
-                    GestureDetector(
-                      onTap: () => _showDeleteAccountDialog(context),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.textMuted.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.delete_forever,
-                              color: AppColors.textMuted,
-                              size: 20,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Delete Account',
-                              style: TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // App Version
-                    const Center(
-                      child: Column(
-                        children: [
+                          const SizedBox(width: 8),
                           Text(
-                            'Elkably Platform v1.0.0',
+                            'Delete Account',
                             style: TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 14,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            '© 2025 All rights reserved',
-                            style: TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 12,
+                              color:
+                                  isDarkMode
+                                      ? AppColors.textMuted
+                                      : AppColors.textMutedLight,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // App Version
+                  Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Elkably Platform v1.0.0',
+                          style: TextStyle(
+                            color:
+                                isDarkMode
+                                    ? AppColors.textMuted
+                                    : AppColors.textMutedLight,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '© 2025 All rights reserved',
+                          style: TextStyle(
+                            color:
+                                isDarkMode
+                                    ? AppColors.textMuted
+                                    : AppColors.textMutedLight,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -637,11 +685,7 @@ class _DeleteWarningItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          const Icon(
-            Icons.remove,
-            color: AppColors.elkablyRed,
-            size: 16,
-          ),
+          const Icon(Icons.remove, color: AppColors.elkablyRed, size: 16),
           const SizedBox(width: 8),
           Text(
             text,
@@ -656,62 +700,45 @@ class _DeleteWarningItem extends StatelessWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final VoidCallback onTap;
+class _ThemeToggleItem extends ConsumerWidget {
+  final WidgetRef ref;
 
-  const _ActionButton({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.onTap,
-  });
+  const _ThemeToggleItem({required this.ref});
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderLight),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 20,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDarkMode = ref.watch(isDarkModeProvider);
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Icon(
+            isDarkMode ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+            color:
+                isDarkMode
+                    ? AppColors.textSecondary
+                    : AppColors.textSecondaryLight,
+            size: 20,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              'Dark Mode',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : AppColors.textPrimaryLight,
+                fontSize: 16,
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.textSecondary,
-            ),
-          ],
-        ),
+          ),
+          Switch(
+            value: isDarkMode,
+            onChanged: (value) {
+              ref.read(isDarkModeProvider.notifier).toggleTheme(value);
+            },
+            activeColor: AppColors.elkablyRed,
+          ),
+        ],
       ),
     );
   }
@@ -720,18 +747,17 @@ class _ActionButton extends StatelessWidget {
 class _SettingsItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Widget? trailing;
   final VoidCallback onTap;
 
   const _SettingsItem({
     required this.icon,
     required this.label,
-    this.trailing,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Padding(
@@ -740,24 +766,29 @@ class _SettingsItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: AppColors.textSecondary,
+              color:
+                  isDarkMode
+                      ? AppColors.textSecondary
+                      : AppColors.textSecondaryLight,
               size: 20,
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : AppColors.textPrimaryLight,
                   fontSize: 16,
                 ),
               ),
             ),
-            if (trailing != null) trailing!,
             const SizedBox(width: 8),
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: AppColors.textSecondary,
+              color:
+                  isDarkMode
+                      ? AppColors.textSecondary
+                      : AppColors.textSecondaryLight,
             ),
           ],
         ),

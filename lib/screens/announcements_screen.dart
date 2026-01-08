@@ -4,24 +4,45 @@ import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../providers/app_providers.dart';
+import 'announcement_details_screen.dart';
 
-class AnnouncementsScreen extends ConsumerWidget {
+class AnnouncementsScreen extends ConsumerStatefulWidget {
   const AnnouncementsScreen({super.key});
+
+  @override
+  ConsumerState<AnnouncementsScreen> createState() =>
+      _AnnouncementsScreenState();
+}
+
+class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch notifications when screen loads
+    Future.microtask(() {
+      ref.read(notificationsProvider.notifier).fetchNotifications();
+    });
+  }
 
   IconData _getNotificationIcon(NotificationType type) {
     switch (type) {
       case NotificationType.attendance:
-        return Icons.calendar_today;
+        return Icons.calendar_today_outlined;
       case NotificationType.assignment:
-        return Icons.book;
+      case NotificationType.homework:
+        return Icons.book_outlined;
       case NotificationType.fee:
-        return Icons.credit_card;
+      case NotificationType.payment:
+        return Icons.credit_card_outlined;
       case NotificationType.grade:
-        return Icons.emoji_events;
+        return Icons.emoji_events_outlined;
       case NotificationType.message:
-        return Icons.message;
+      case NotificationType.custom:
+        return Icons.message_outlined;
+      case NotificationType.block:
+      case NotificationType.unblock:
       case NotificationType.general:
-        return Icons.notifications;
+        return Icons.notifications_outlined;
     }
   }
 
@@ -30,146 +51,380 @@ class AnnouncementsScreen extends ConsumerWidget {
       case NotificationType.attendance:
         return AppColors.elkablyRed;
       case NotificationType.assignment:
+      case NotificationType.homework:
         return AppColors.info;
       case NotificationType.fee:
+      case NotificationType.payment:
         return AppColors.warning;
       case NotificationType.grade:
         return AppColors.success;
       case NotificationType.message:
+      case NotificationType.custom:
         return const Color(0xFFA855F7); // Purple
+      case NotificationType.block:
+        return const Color(0xFFEF4444); // Red
+      case NotificationType.unblock:
+        return const Color(0xFF10B981); // Green
       case NotificationType.general:
         return AppColors.textSecondary;
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final activeTab = ref.watch(announcementTabProvider);
-    final filteredNotifications = ref.watch(filteredNotificationsProvider);
-
-    final tabs = [
-      _TabItem(id: null, label: 'All'),
-      _TabItem(id: NotificationType.attendance, label: 'Attendance'),
-      _TabItem(id: NotificationType.assignment, label: 'Assignments'),
-      _TabItem(id: NotificationType.fee, label: 'Fees'),
-      _TabItem(id: NotificationType.grade, label: 'Grades'),
-      _TabItem(id: NotificationType.message, label: 'Messages'),
-    ];
+  Widget build(BuildContext context) {
+    final notifState = ref.watch(notificationsProvider);
+    final notifications = notifState.notifications;
+    final isDarkMode = ref.watch(isDarkModeProvider);
+    final unreadCount = notifications.where((n) => n.isNew).length;
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceBackground,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              decoration: const BoxDecoration(
-                gradient: AppGradients.headerGradient,
-              ),
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Announcements',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Tabs
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: tabs.map((tab) {
-                        final isActive = activeTab == tab.id;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: GestureDetector(
-                            onTap: () {
-                              ref.read(announcementTabProvider.notifier).state = tab.id;
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isActive
-                                    ? AppColors.elkablyRed
-                                    : AppColors.surfaceBackground,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: isActive
-                                    ? [
-                                        BoxShadow(
-                                          color: AppColors.elkablyRed.withValues(alpha: 0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Text(
-                                tab.label,
-                                style: TextStyle(
-                                  color: isActive
-                                      ? Colors.white
-                                      : AppColors.textSecondary,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
+      backgroundColor:
+          isDarkMode
+              ? AppColors.surfaceBackground
+              : AppColors.surfaceBackgroundLight,
+      body: Column(
+        children: [
+          // Header
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: AppColors.elkablyRed,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
               ),
             ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                child: Column(
+                  children: [
+                    const Center(
+                      child: Text(
+                        'Notifications',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-            // Notifications List
-            Expanded(
-              child: filteredNotifications.isEmpty
-                  ? Center(
+                    // Notification count and Mark all as read
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 0,
+                        vertical: 12,
+                      ),
+                      // decoration: BoxDecoration(
+                      //   color: Colors.white.withValues(alpha: 0.2),
+                      //   borderRadius: BorderRadius.circular(16),
+                      // ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '$unreadCount new notification(s)',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              // Mark all notifications as read
+                              await ref
+                                  .read(notificationsProvider.notifier)
+                                  .markAllAsRead();
+
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                      'All notifications marked as read',
+                                    ),
+                                    backgroundColor: AppColors.success,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.done_all,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Mark all as read',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Notifications List
+          Expanded(
+            child:
+                notifState.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : notifState.error != null
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: AppColors.elkablyRed,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            notifState.error!,
+                            style: TextStyle(
+                              color:
+                                  isDarkMode
+                                      ? AppColors.textSecondary
+                                      : AppColors.textSecondaryLight,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              ref
+                                  .read(notificationsProvider.notifier)
+                                  .refresh();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.elkablyRed,
+                            ),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                    : notifications.isEmpty
+                    ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.notifications_off,
                             size: 48,
-                            color: AppColors.textMuted,
+                            color:
+                                isDarkMode
+                                    ? AppColors.textMuted
+                                    : AppColors.textMutedLight,
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'No notifications in this category',
+                          Text(
+                            'No notifications',
                             style: TextStyle(
-                              color: AppColors.textSecondary,
+                              color:
+                                  isDarkMode
+                                      ? AppColors.textSecondary
+                                      : AppColors.textSecondaryLight,
                               fontSize: 14,
                             ),
                           ),
                         ],
                       ),
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
-                      itemCount: filteredNotifications.length,
-                      itemBuilder: (context, index) {
-                        final notification = filteredNotifications[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: _NotificationCard(
-                            notification: notification,
-                            icon: _getNotificationIcon(notification.type),
-                            iconColor: _getNotificationColor(notification.type),
-                          ),
-                        );
+                    : RefreshIndicator(
+                      onRefresh: () async {
+                        await ref
+                            .read(notificationsProvider.notifier)
+                            .refresh();
                       },
+                      child: ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
+                        itemCount: notifications.length,
+                        itemBuilder: (context, index) {
+                          final notification = notifications[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _NotificationCard(
+                              notification: notification,
+                              icon: _getNotificationIcon(notification.type),
+                              iconColor: _getNotificationColor(
+                                notification.type,
+                              ),
+                              isDarkMode: isDarkMode,
+                            ),
+                          );
+                        },
+                      ),
                     ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificationCard extends ConsumerWidget {
+  final AppNotification notification;
+  final IconData icon;
+  final Color iconColor;
+  final bool isDarkMode;
+
+  const _NotificationCard({
+    required this.notification,
+    required this.icon,
+    required this.iconColor,
+    this.isDarkMode = true,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final date = DateTime.parse(notification.date);
+
+    return GestureDetector(
+      onTap: () {
+        // Mark as read if it's new
+        if (notification.isNew) {
+          ref.read(notificationsProvider.notifier).markAsRead(notification.id);
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) =>
+                    AnnouncementDetailsScreen(notification: notification),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDarkMode ? AppColors.cardBackground : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.15 : 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color:
+                    isDarkMode
+                        ? iconColor.withValues(alpha: 0.2)
+                        : AppColors.iconBackgroundLight,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 22, color: iconColor),
+            ),
+            const SizedBox(width: 14),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notification.title,
+                          style: TextStyle(
+                            color:
+                                isDarkMode
+                                    ? Colors.white
+                                    : AppColors.textPrimaryLight,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (notification.isNew)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: AppColors.info,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    notification.description,
+                    style: TextStyle(
+                      color:
+                          isDarkMode
+                              ? AppColors.textSecondary
+                              : AppColors.textSecondaryLight,
+                      fontSize: 14,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (notification.studentName != null)
+                        Text(
+                          '${notification.studentName} (${notification.studentCode})',
+                          style: TextStyle(
+                            color:
+                                isDarkMode
+                                    ? AppColors.textMuted
+                                    : AppColors.textMutedLight,
+                            fontSize: 12,
+                          ),
+                        ),
+                      const Spacer(),
+                      Text(
+                        DateFormat('MMM d, HH:mm').format(date),
+                        style: TextStyle(
+                          color:
+                              isDarkMode
+                                  ? AppColors.textMuted
+                                  : AppColors.textMutedLight,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -177,138 +432,3 @@ class AnnouncementsScreen extends ConsumerWidget {
     );
   }
 }
-
-class _TabItem {
-  final NotificationType? id;
-  final String label;
-
-  _TabItem({required this.id, required this.label});
-}
-
-class _NotificationCard extends StatelessWidget {
-  final AppNotification notification;
-  final IconData icon;
-  final Color iconColor;
-
-  const _NotificationCard({
-    required this.notification,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final date = DateTime.parse(notification.date);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: iconColor,
-            ),
-          ),
-          const SizedBox(width: 16),
-
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        notification.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    if (notification.isNew)
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.elkablyRed,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'New',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  notification.description,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (notification.teacherName != null)
-                      Text(
-                        notification.teacherName!,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    const Spacer(),
-                    Text(
-                      DateFormat('MMM d, HH:mm').format(date),
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-

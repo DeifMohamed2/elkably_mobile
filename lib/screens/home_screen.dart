@@ -4,475 +4,591 @@ import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../providers/app_providers.dart';
+import '../widgets/home/home_header.dart';
+import '../widgets/home/stat_row.dart';
+import '../widgets/home/notification_item.dart';
+import '../widgets/home/card_container.dart';
+import '../widgets/home/balance_card.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   final void Function(String screen) onNavigate;
 
   const HomeScreen({super.key, required this.onNavigate});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch dashboard data on mount
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(dashboardNotifierProvider.notifier).fetchDashboard();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final student = ref.watch(studentProvider);
-    final attendance = ref.watch(attendanceProvider);
+    final students = ref.watch(studentsProvider);
+    final selectedStudentIndex = ref.watch(selectedStudentIndexProvider);
+    final dashboardState = ref.watch(dashboardNotifierProvider);
     final totalAbsences = ref.watch(totalAbsencesProvider);
     final pendingAssignments = ref.watch(pendingAssignmentsProvider);
     final newNotificationsCount = ref.watch(newNotificationsCountProvider);
-    final notifications = ref.watch(notificationsProvider);
+    final isDarkMode = ref.watch(isDarkModeProvider);
+    final totalUnpaid = ref.watch(totalUnpaidFeesProvider);
 
-    final todayAttendance = attendance.isNotEmpty ? attendance[0] : null;
-    final recentNotifications = notifications.take(3).toList();
+    // Use dashboard data if available, otherwise fallback
+    final dashboardData = dashboardState.data;
+    final lastSession = dashboardData?.lastSession;
+    final recentNotifications = dashboardData?.recentNotifications ?? [];
+    final totals = dashboardData?.totals;
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceBackground,
-      body: SafeArea(
+      backgroundColor:
+          isDarkMode
+              ? AppColors.surfaceBackground
+              : AppColors.surfaceBackgroundLight,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(dashboardNotifierProvider.notifier).fetchDashboard();
+        },
+        color: AppColors.elkablyRed,
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 100),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: AppGradients.headerGradient,
-                ),
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                child: Row(
-                  children: [
-                    // Student Avatar
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: AppGradients.primaryGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.elkablyRed.withValues(alpha: 0.2),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          student.name[0],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w500,
-                          ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            HomeHeader(
+              student: student,
+              students: students,
+              selectedStudentIndex: selectedStudentIndex,
+              newNotificationsCount: newNotificationsCount,
+              onNotificationTap: () => widget.onNavigate('announcements'),
+              isDarkMode: isDarkMode,
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+
+                  // Balance Card
+                  BalanceCard(
+                    remainingAmount: totalUnpaid,
+                    isDarkMode: isDarkMode,
+                   
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Loading State
+                  if (dashboardState.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: CircularProgressIndicator(
+                          color: AppColors.elkablyRed,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
 
-                    // Student Info
-                    Expanded(
+                  // Error State
+                  if (dashboardState.error != null && !dashboardState.isLoading)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: AppColors.elkablyRed.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.elkablyRed.withValues(alpha: 0.3),
+                        ),
+                      ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            student.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                            ),
+                          Icon(
+                            Icons.error_outline,
+                            color: AppColors.elkablyRed,
+                            size: 48,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 12),
                           Text(
-                            '${student.grade} • ${student.studentClass}',
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
+                            dashboardState.error!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color:
+                                  isDarkMode
+                                      ? Colors.white
+                                      : AppColors.textPrimaryLight,
                               fontSize: 14,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Notification Badge
-                    GestureDetector(
-                      onTap: () => onNavigate('announcements'),
-                      child: Stack(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.notifications_outlined,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          if (newNotificationsCount > 0)
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Container(
-                                width: 20,
-                                height: 20,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.elkablyRed,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '$newNotificationsCount',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              ref
+                                  .read(dashboardNotifierProvider.notifier)
+                                  .refresh();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.elkablyRed,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
+                            child: const Text('Retry'),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-
-                    // Today's Status Card
-                    _buildCard(
-                      title: "Today's Status",
-                      child: Row(
-                        children: [
-                          // Attendance Status
-                          Expanded(
-                            child: _StatusItem(
-                              icon: todayAttendance?.status == AttendanceStatus.present
-                                  ? Icons.check_circle
-                                  : Icons.cancel,
-                              iconColor: todayAttendance?.status == AttendanceStatus.present
-                                  ? AppColors.success
-                                  : AppColors.elkablyRed,
-                              label: 'Attendance',
-                              value: todayAttendance?.status == AttendanceStatus.present
-                                  ? 'Present'
-                                  : 'Absent',
-                              valueColor: todayAttendance?.status == AttendanceStatus.present
-                                  ? AppColors.success
-                                  : AppColors.elkablyRed,
-                            ),
+                  // Show content only when not loading and no error
+                  if (!dashboardState.isLoading &&
+                      dashboardState.error == null) ...[
+                    // Last Session Status Section
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Last Session Status",
+                          style: TextStyle(
+                            color:
+                                isDarkMode
+                                    ? Colors.white
+                                    : const Color.fromARGB(255, 0, 0, 0),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
                           ),
+                        ),
+                        const SizedBox(height: 16),
 
-                          // Homework Status
-                          Expanded(
-                            child: _StatusItem(
-                              icon: todayAttendance?.homeworkStatus == HomeworkStatus.done
-                                  ? Icons.check_circle
-                                  : Icons.cancel,
-                              iconColor: todayAttendance?.homeworkStatus == HomeworkStatus.done
-                                  ? AppColors.success
-                                  : AppColors.warning,
-                              label: 'Homework',
-                              value: todayAttendance?.homeworkStatus == HomeworkStatus.done
-                                  ? 'Done'
-                                  : 'Pending',
-                              valueColor: todayAttendance?.homeworkStatus == HomeworkStatus.done
-                                  ? AppColors.success
-                                  : AppColors.warning,
-                            ),
+                        // Status Card - Combined
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color:
+                                isDarkMode
+                                    ? AppColors.cardBackground
+                                    : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border:
+                                isDarkMode
+                                    ? null
+                                    : Border.all(
+                                      color: AppColors.borderLight,
+                                      width: 1,
+                                    ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: isDarkMode ? 0.2 : 0.06,
+                                ),
+                                blurRadius: isDarkMode ? 8 : 12,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                          child:
+                              lastSession != null
+                                  ? Column(
+                                    children: [
+                                      // Attendance Row
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: (lastSession.status ==
+                                                              AttendanceStatus
+                                                                  .present ||
+                                                          lastSession.status ==
+                                                              AttendanceStatus
+                                                                  .presentFromOtherGroup
+                                                      ? AppColors.success
+                                                      : lastSession.status ==
+                                                          AttendanceStatus.late
+                                                      ? AppColors.warning
+                                                      : AppColors.elkablyRed)
+                                                  .withValues(alpha: 0.15),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              lastSession.status ==
+                                                          AttendanceStatus
+                                                              .present ||
+                                                      lastSession.status ==
+                                                          AttendanceStatus
+                                                              .presentFromOtherGroup
+                                                  ? Icons
+                                                      .check_circle_outline_rounded
+                                                  : lastSession.status ==
+                                                      AttendanceStatus.late
+                                                  ? Icons.schedule
+                                                  : Icons.cancel_outlined,
+                                              color:
+                                                  lastSession.status ==
+                                                              AttendanceStatus
+                                                                  .present ||
+                                                          lastSession.status ==
+                                                              AttendanceStatus
+                                                                  .presentFromOtherGroup
+                                                      ? AppColors.success
+                                                      : lastSession.status ==
+                                                          AttendanceStatus.late
+                                                      ? AppColors.warning
+                                                      : AppColors.elkablyRed,
+                                              size: 24,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Attendance',
+                                                  style: TextStyle(
+                                                    color:
+                                                        isDarkMode
+                                                            ? AppColors
+                                                                .textSecondary
+                                                            : AppColors
+                                                                .textSecondaryLight,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  lastSession.status ==
+                                                          AttendanceStatus
+                                                              .present
+                                                      ? 'Present'
+                                                      : lastSession.status ==
+                                                          AttendanceStatus.late
+                                                      ? 'Late'
+                                                      : lastSession.status ==
+                                                          AttendanceStatus
+                                                              .presentFromOtherGroup
+                                                      ? 'Present (Other)'
+                                                      : 'Absent',
+                                                  style: TextStyle(
+                                                    color:
+                                                        lastSession.status ==
+                                                                    AttendanceStatus
+                                                                        .present ||
+                                                                lastSession
+                                                                        .status ==
+                                                                    AttendanceStatus
+                                                                        .presentFromOtherGroup
+                                                            ? AppColors.success
+                                                            : lastSession
+                                                                    .status ==
+                                                                AttendanceStatus
+                                                                    .late
+                                                            ? AppColors.warning
+                                                            : AppColors
+                                                                .elkablyRed,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                DateFormat('MMM d').format(
+                                                  DateTime.parse(
+                                                    lastSession.date,
+                                                  ),
+                                                ),
+                                                style: TextStyle(
+                                                  color:
+                                                      isDarkMode
+                                                          ? AppColors.textMuted
+                                                          : AppColors
+                                                              .textMutedLight,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              if (lastSession.time != null &&
+                                                  lastSession.time != 'N/A')
+                                                Text(
+                                                  lastSession.time!,
+                                                  style: TextStyle(
+                                                    color:
+                                                        isDarkMode
+                                                            ? AppColors
+                                                                .textMuted
+                                                            : AppColors
+                                                                .textMutedLight,
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      // Divider
+                                      Divider(
+                                        color:
+                                            isDarkMode
+                                                ? AppColors.borderLight
+                                                    .withValues(alpha: 0.3)
+                                                : AppColors.borderLight,
+                                        height: 1,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      // Homework Row
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: (lastSession.homeworkStatus
+                                                              .contains(
+                                                                'Submitted',
+                                                              ) ||
+                                                          lastSession
+                                                              .homeworkStatus
+                                                              .contains(
+                                                                'with steps',
+                                                              )
+                                                      ? AppColors.success
+                                                      : AppColors.warning)
+                                                  .withValues(alpha: 0.15),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              lastSession.homeworkStatus
+                                                          .contains(
+                                                            'Submitted',
+                                                          ) ||
+                                                      lastSession.homeworkStatus
+                                                          .contains(
+                                                            'with steps',
+                                                          )
+                                                  ? Icons.task_alt_outlined
+                                                  : Icons
+                                                      .pending_actions_outlined,
+                                              color:
+                                                  lastSession.homeworkStatus
+                                                              .contains(
+                                                                'Submitted',
+                                                              ) ||
+                                                          lastSession
+                                                              .homeworkStatus
+                                                              .contains(
+                                                                'with steps',
+                                                              )
+                                                      ? AppColors.success
+                                                      : AppColors.warning,
+                                              size: 24,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Homework',
+                                                  style: TextStyle(
+                                                    color:
+                                                        isDarkMode
+                                                            ? AppColors
+                                                                .textSecondary
+                                                            : AppColors
+                                                                .textSecondaryLight,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  lastSession.homeworkStatus,
+                                                  style: TextStyle(
+                                                    color:
+                                                        lastSession.homeworkStatus
+                                                                    .contains(
+                                                                      'Submitted',
+                                                                    ) ||
+                                                                lastSession
+                                                                    .homeworkStatus
+                                                                    .contains(
+                                                                      'with steps',
+                                                                    )
+                                                            ? AppColors.success
+                                                            : AppColors.warning,
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                  : Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Text(
+                                        'No session data available',
+                                        style: TextStyle(
+                                          color:
+                                              isDarkMode
+                                                  ? AppColors.textSecondary
+                                                  : AppColors
+                                                      .textSecondaryLight,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
 
                     // Quick Stats Card
-                    _buildCard(
+                    CardContainer(
+                      isDarkMode: isDarkMode,
                       title: 'Quick Stats',
-                      child: Column(
-                        children: [
-                          _StatRow(
-                            icon: Icons.calendar_today,
-                            iconBgColor: AppColors.elkablyRed.withValues(alpha: 0.2),
-                            iconColor: AppColors.elkablyRed,
-                            label: 'Total Absences',
-                            value: '$totalAbsences',
-                          ),
-                          const SizedBox(height: 16),
-                          _StatRow(
-                            icon: Icons.book,
-                            iconBgColor: AppColors.warning.withValues(alpha: 0.2),
-                            iconColor: AppColors.warning,
-                            label: 'Pending Assignments',
-                            value: '$pendingAssignments',
-                          ),
-                          const SizedBox(height: 16),
-                          _StatRow(
-                            icon: Icons.emoji_events,
-                            iconBgColor: AppColors.info.withValues(alpha: 0.2),
-                            iconColor: AppColors.info,
-                            label: 'Upcoming Exams',
-                            value: '3',
-                          ),
-                        ],
-                      ),
+                      child:
+                          totals != null
+                              ? Column(
+                                children: [
+                                  StatRow(
+                                    icon: Icons.check_circle_outline,
+                                    iconBgColor: AppColors.success.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    iconColor: AppColors.success,
+                                    label: 'Present',
+                                    value: '${totals.present}',
+                                    isDarkMode: isDarkMode,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  StatRow(
+                                    icon: Icons.schedule,
+                                    iconBgColor: AppColors.warning.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    iconColor: AppColors.warning,
+                                    label: 'Late',
+                                    value: '${totals.late}',
+                                    isDarkMode: isDarkMode,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  StatRow(
+                                    icon: Icons.cancel_outlined,
+                                    iconBgColor: AppColors.elkablyRed
+                                        .withValues(alpha: 0.2),
+                                    iconColor: AppColors.elkablyRed,
+                                    label: 'Absent',
+                                    value: '${totals.absent}',
+                                    isDarkMode: isDarkMode,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  StatRow(
+                                    icon: Icons.calendar_today_outlined,
+                                    iconBgColor: AppColors.info.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    iconColor: AppColors.info,
+                                    label: 'Total Sessions',
+                                    value: '${totals.total}',
+                                    isDarkMode: isDarkMode,
+                                  ),
+                                ],
+                              )
+                              : Column(
+                                children: [
+                                  StatRow(
+                                    icon: Icons.calendar_today_outlined,
+                                    iconBgColor: AppColors.elkablyRed
+                                        .withValues(alpha: 0.2),
+                                    iconColor: AppColors.elkablyRed,
+                                    label: 'Total Absences',
+                                    value: '$totalAbsences',
+                                    isDarkMode: isDarkMode,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  StatRow(
+                                    icon: Icons.assignment_outlined,
+                                    iconBgColor: AppColors.warning.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    iconColor: AppColors.warning,
+                                    label: 'Pending Assignments',
+                                    value: '$pendingAssignments',
+                                    isDarkMode: isDarkMode,
+                                  ),
+                                ],
+                              ),
                     ),
                     const SizedBox(height: 20),
 
                     // Recent Notifications Card
-                    _buildCard(
-                      title: 'Recent Notifications',
-                      trailing: GestureDetector(
-                        onTap: () => onNavigate('announcements'),
-                        child: const Text(
-                          'View All',
-                          style: TextStyle(
-                            color: AppColors.elkablyRed,
-                            fontSize: 14,
+                    if (recentNotifications.isNotEmpty)
+                      CardContainer(
+                        isDarkMode: isDarkMode,
+                        title: 'Recent Notifications',
+                        trailing: GestureDetector(
+                          onTap: () => widget.onNavigate('announcements'),
+                          child: const Text(
+                            'View All',
+                            style: TextStyle(
+                              color: AppColors.elkablyRed,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
+                        child: Column(
+                          children:
+                              recentNotifications.take(3).map((notification) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: NotificationItem(
+                                    notification: notification,
+                                    isDarkMode: isDarkMode,
+                                  ),
+                                );
+                              }).toList(),
+                        ),
                       ),
-                      child: Column(
-                        children: recentNotifications.map((notification) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _NotificationItem(notification: notification),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCard({
-    required String title,
-    Widget? trailing,
-    required Widget child,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (trailing != null) trailing,
-            ],
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusItem extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  const _StatusItem({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-    required this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: iconColor, size: 24),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
-            Text(
-              value,
-              style: TextStyle(
-                color: valueColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+                  ], // End of conditional content
+                ],
               ),
             ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class _StatRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconBgColor;
-  final Color iconColor;
-  final String label;
-  final String value;
-
-  const _StatRow({
-    required this.icon,
-    required this.iconBgColor,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: iconBgColor,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _NotificationItem extends StatelessWidget {
-  final AppNotification notification;
-
-  const _NotificationItem({required this.notification});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (notification.isNew)
-            Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.only(top: 6, right: 12),
-              decoration: const BoxDecoration(
-                color: AppColors.elkablyRed,
-                shape: BoxShape.circle,
-              ),
-            ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  notification.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  notification.description,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _formatDate(notification.date),
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
-
-  String _formatDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return DateFormat('MMM d, HH:mm').format(date);
-  }
 }
-
