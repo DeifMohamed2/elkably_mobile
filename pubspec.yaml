@@ -3,7 +3,7 @@ description: "Elkably - Student Tracking Platform for parents and students to mo
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 
-version: 1.0.1+2
+version: 1.0.2+3
 
 environment:
   sdk: ^3.7.2
