@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'core/services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'models/models.dart';
@@ -98,36 +99,77 @@ class _AppNavigatorState extends ConsumerState<AppNavigator> {
     });
   }
 
-  void _handleLogin(String phone, String studentCode) {
+  void _handleLogin(UserRole role, String emailOrPhone, String passwordOrCode) {
     debugPrint('========== MAIN LOGIN HANDLER ==========');
     debugPrint('[MAIN] Login initiated');
-    debugPrint('[MAIN] Phone: $phone');
-    debugPrint('[MAIN] Student Code: $studentCode');
+    debugPrint('[MAIN] Role: $role');
+    debugPrint('[MAIN] Email/Phone: $emailOrPhone');
+    debugPrint('[MAIN] Password/Code: $passwordOrCode');
 
     () async {
-      final success = await ref
-          .read(authProvider.notifier)
-          .loginParent(phone, studentCode);
+      if (role == UserRole.student) {
+        // For student login, open the Elkably web login page in browser
+        debugPrint('[MAIN] Student login - opening browser');
+        final encodedEmail = Uri.encodeComponent(emailOrPhone);
+        final encodedPassword = Uri.encodeComponent(passwordOrCode);
+        final loginUrl =
+            'https://elkably.com/auth/login?email=$encodedEmail&password=$encodedPassword';
 
-      debugPrint('[MAIN] Login completed - Success: $success');
+        debugPrint('[MAIN] Opening URL: $loginUrl');
 
-      if (success) {
-        debugPrint('[MAIN] ✅ Navigating to Home screen');
-        ref.read(currentScreenProvider.notifier).state = AppScreen.home;
+        final uri = Uri.parse(loginUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication, // Opens in device browser
+          );
+          debugPrint('[MAIN] ✅ Browser opened successfully');
+        } else {
+          debugPrint('[MAIN] ❌ Could not launch URL');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'Could not open browser. Please try again.',
+                ),
+                backgroundColor: AppColors.elkablyRed,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            );
+          }
+        }
       } else {
-        debugPrint('[MAIN] ❌ Showing error snackbar');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Login failed. Check phone/code and try again.',
-            ),
-            backgroundColor: AppColors.elkablyRed,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
+        // For parent login, use the API as before
+        debugPrint('[MAIN] Parent login - calling API');
+        final success = await ref
+            .read(authProvider.notifier)
+            .loginParent(emailOrPhone, passwordOrCode);
+
+        debugPrint('[MAIN] Login completed - Success: $success');
+
+        if (success) {
+          debugPrint('[MAIN] ✅ Navigating to Home screen');
+          ref.read(currentScreenProvider.notifier).state = AppScreen.home;
+        } else {
+          debugPrint('[MAIN] ❌ Showing error snackbar');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'Login failed. Check phone/code and try again.',
+                ),
+                backgroundColor: AppColors.elkablyRed,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            );
+          }
+        }
       }
     }();
   }

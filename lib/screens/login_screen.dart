@@ -4,7 +4,7 @@ import '../theme/app_theme.dart';
 import '../models/models.dart';
 
 class LoginScreen extends StatefulWidget {
-  final void Function(String phone, String password) onLogin;
+  final void Function(UserRole role, String phone, String password) onLogin;
 
   const LoginScreen({super.key, required this.onLogin});
 
@@ -73,14 +73,20 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (phone.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter your phone number';
+        _errorMessage =
+            _selectedRole == UserRole.parent
+                ? 'Please enter your phone number'
+                : 'Please enter your email or phone';
       });
       return;
     }
 
     if (password.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter your password';
+        _errorMessage =
+            _selectedRole == UserRole.parent
+                ? 'Please enter your student code'
+                : 'Please enter your password';
       });
       return;
     }
@@ -92,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen>
 
     // Simulate network delay
     Future.delayed(const Duration(milliseconds: 800), () {
-      widget.onLogin(phone, password);
+      widget.onLogin(_selectedRole, phone, password);
       setState(() {
         _isLoading = false;
       });
@@ -189,295 +195,326 @@ class _LoginScreenState extends State<LoginScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                          // Role Slider Switch
-                          Center(
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: inputBgColor,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: inputBorderColor ?? Colors.grey[300]!,
-                                  width: 2,
+                            // Role Slider Switch
+                            Center(
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: inputBgColor,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color:
+                                        inputBorderColor ?? Colors.grey[300]!,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _RoleToggleButton(
+                                      label: 'Parent',
+                                      icon: Icons.people_outline,
+                                      isSelected:
+                                          _selectedRole == UserRole.parent,
+                                      onTap: () => _toggleRole(UserRole.parent),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    _RoleToggleButton(
+                                      label: 'Student',
+                                      icon: Icons.school_outlined,
+                                      isSelected:
+                                          _selectedRole == UserRole.student,
+                                      onTap:
+                                          () => _toggleRole(UserRole.student),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _RoleToggleButton(
-                                    label: 'Parent',
-                                    icon: Icons.people_outline,
-                                    isSelected:
-                                        _selectedRole == UserRole.parent,
-                                    onTap: () => _toggleRole(UserRole.parent),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  _RoleToggleButton(
-                                    label: 'Student',
-                                    icon: Icons.school_outlined,
-                                    isSelected:
-                                        _selectedRole == UserRole.student,
-                                    onTap: () => _toggleRole(UserRole.student),
-                                  ),
-                                ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Welcome Text
+                            Text(
+                              'Welcome',
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Welcome Text
-                          Text(
-                            'Welcome',
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w600,
+                            Text(
+                              _selectedRole == UserRole.parent
+                                  ? 'Track your child\'s progress'
+                                  : 'View your academic progress',
+                              style: TextStyle(color: hintColor, fontSize: 14),
                             ),
-                          ),
-                          Text(
-                            _selectedRole == UserRole.parent
-                                ? 'Track your child\'s progress'
-                                : 'View your academic progress',
-                            style: TextStyle(color: hintColor, fontSize: 14),
-                          ),
-                          const SizedBox(height: 12),
+                            const SizedBox(height: 12),
 
-                          // Error Message
-                          if (_errorMessage != null) ...[
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.elkablyRed.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
+                            // Error Message
+                            if (_errorMessage != null) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
                                   color: AppColors.elkablyRed.withValues(
-                                    alpha: 0.3,
+                                    alpha: 0.1,
                                   ),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.error_outline,
-                                    color: AppColors.elkablyRed,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      _errorMessage!,
-                                      style: const TextStyle(
-                                        color: AppColors.elkablyRed,
-                                        fontSize: 14,
-                                      ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppColors.elkablyRed.withValues(
+                                      alpha: 0.3,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-
-                          // Phone Number Label
-                          Text(
-                            'Phone Number',
-                            style: TextStyle(
-                              color: secondaryTextColor,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          // Phone Number Input
-                          TextFormField(
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            textDirection: TextDirection.ltr,
-                            onChanged: (_) {
-                              if (_errorMessage != null) {
-                                setState(() {
-                                  _errorMessage = null;
-                                });
-                              }
-                            },
-                            decoration: InputDecoration(
-                              hintText: '01xxxxxxxxx',
-                              hintStyle: TextStyle(
-                                color: hintColor,
-                                fontSize: 16,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.phone_outlined,
-                                color: hintColor,
-                              ),
-                              filled: true,
-                              fillColor: inputBgColor,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: inputBorderColor ?? Colors.grey[300]!,
-                                  width: 2,
                                 ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: inputBorderColor ?? Colors.grey[300]!,
-                                  width: 2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: AppColors.elkablyRed,
-                                  width: 2,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: AppColors.elkablyRed,
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your phone number';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Student Code Label
-                          Text(
-                            'Student Code',
-                            style: TextStyle(
-                              color: secondaryTextColor,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Password Input
-                          TextFormField(
-                            controller: _passwordController,
-                            keyboardType: TextInputType.text,
-                            textCapitalization: TextCapitalization.characters,
-                            textDirection: TextDirection.ltr,
-                            onChanged: (_) {
-                              if (_errorMessage != null) {
-                                setState(() {
-                                  _errorMessage = null;
-                                });
-                              }
-                            },
-                            onFieldSubmitted: (_) => _handleLogin(),
-                            decoration: InputDecoration(
-                              hintText: 'K1234',
-                              hintStyle: TextStyle(
-                                color: hintColor,
-                                fontSize: 16,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.badge_outlined,
-                                color: hintColor,
-                              ),
-                              filled: true,
-                              fillColor: inputBgColor,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: inputBorderColor ?? Colors.grey[300]!,
-                                  width: 2,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: inputBorderColor ?? Colors.grey[300]!,
-                                  width: 2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: AppColors.elkablyRed,
-                                  width: 2,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: AppColors.elkablyRed,
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your student code';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Login Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleLogin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.elkablyRed,
-                                disabledBackgroundColor: AppColors.elkablyRed
-                                    .withValues(alpha: 0.6),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 0,
-                              ),
-                              child:
-                                  _isLoading
-                                      ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      )
-                                      : const Text(
-                                        'Login',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w600,
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: AppColors.elkablyRed,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(
+                                          color: AppColors.elkablyRed,
+                                          fontSize: 14,
                                         ),
                                       ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // First Field Label (Phone Number for Parent, Email/Phone for Student)
+                            Text(
+                              _selectedRole == UserRole.parent
+                                  ? 'Phone Number'
+                                  : 'Email or Phone',
+                              style: TextStyle(
+                                color: secondaryTextColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+                            // First Field Input
+                            TextFormField(
+                              controller: _phoneController,
+                              keyboardType:
+                                  _selectedRole == UserRole.parent
+                                      ? TextInputType.phone
+                                      : TextInputType.emailAddress,
+                              textDirection: TextDirection.ltr,
+                              onChanged: (_) {
+                                if (_errorMessage != null) {
+                                  setState(() {
+                                    _errorMessage = null;
+                                  });
+                                }
+                              },
+                              decoration: InputDecoration(
+                                hintText:
+                                    _selectedRole == UserRole.parent
+                                        ? '01xxxxxxxxx'
+                                        : 'student@example.com or 01xxxxxxxxx',
+                                hintStyle: TextStyle(
+                                  color: hintColor,
+                                  fontSize: 16,
+                                ),
+                                prefixIcon: Icon(
+                                  _selectedRole == UserRole.parent
+                                      ? Icons.phone_outlined
+                                      : Icons.alternate_email,
+                                  color: hintColor,
+                                ),
+                                filled: true,
+                                fillColor: inputBgColor,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color:
+                                        inputBorderColor ?? Colors.grey[300]!,
+                                    width: 2,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color:
+                                        inputBorderColor ?? Colors.grey[300]!,
+                                    width: 2,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.elkablyRed,
+                                    width: 2,
+                                  ),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.elkablyRed,
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return _selectedRole == UserRole.parent
+                                      ? 'Please enter your phone number'
+                                      : 'Please enter your email or phone';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Second Field Label (Student Code for Parent, Password for Student)
+                            Text(
+                              _selectedRole == UserRole.parent
+                                  ? 'Student Code'
+                                  : 'Password',
+                              style: TextStyle(
+                                color: secondaryTextColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Second Field Input
+                            TextFormField(
+                              controller: _passwordController,
+                              keyboardType: TextInputType.text,
+                              textCapitalization:
+                                  _selectedRole == UserRole.parent
+                                      ? TextCapitalization.characters
+                                      : TextCapitalization.none,
+                              obscureText: _selectedRole == UserRole.student,
+                              textDirection: TextDirection.ltr,
+                              onChanged: (_) {
+                                if (_errorMessage != null) {
+                                  setState(() {
+                                    _errorMessage = null;
+                                  });
+                                }
+                              },
+                              onFieldSubmitted: (_) => _handleLogin(),
+                              decoration: InputDecoration(
+                                hintText:
+                                    _selectedRole == UserRole.parent
+                                        ? 'K1234'
+                                        : '••••••••',
+                                hintStyle: TextStyle(
+                                  color: hintColor,
+                                  fontSize: 16,
+                                ),
+                                prefixIcon: Icon(
+                                  _selectedRole == UserRole.parent
+                                      ? Icons.badge_outlined
+                                      : Icons.lock_outline,
+                                  color: hintColor,
+                                ),
+                                filled: true,
+                                fillColor: inputBgColor,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color:
+                                        inputBorderColor ?? Colors.grey[300]!,
+                                    width: 2,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide(
+                                    color:
+                                        inputBorderColor ?? Colors.grey[300]!,
+                                    width: 2,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.elkablyRed,
+                                    width: 2,
+                                  ),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.elkablyRed,
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return _selectedRole == UserRole.parent
+                                      ? 'Please enter your student code'
+                                      : 'Please enter your password';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Login Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.elkablyRed,
+                                  disabledBackgroundColor: AppColors.elkablyRed
+                                      .withValues(alpha: 0.6),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child:
+                                    _isLoading
+                                        ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                          ),
+                                        )
+                                        : const Text(
+                                          'Login',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                     ),
                   ),
                 ),
