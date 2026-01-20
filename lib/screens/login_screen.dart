@@ -1,10 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 
 class LoginScreen extends StatefulWidget {
-  final void Function(UserRole role, String phone, String password) onLogin;
+  final void Function(UserRole role, String phone, String password, String learningMode) onLogin;
 
   const LoginScreen({super.key, required this.onLogin});
 
@@ -20,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _passwordController = TextEditingController();
 
   UserRole _selectedRole = UserRole.parent;
+  String _learningMode = 'online'; // 'online' or 'onground'
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
 
@@ -98,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen>
 
     // Simulate network delay
     Future.delayed(const Duration(milliseconds: 800), () {
-      widget.onLogin(_selectedRole, phone, password);
+      widget.onLogin(_selectedRole, phone, password, _learningMode);
       setState(() {
         _isLoading = false;
       });
@@ -154,26 +156,35 @@ class _LoginScreenState extends State<LoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Logo
-                        Container(
-                          width: 70,
-                          height: 70,
-                          padding: const EdgeInsets.all(10),
-                          child: Image.asset(
-                            'assets/images/logo-white-.png',
-                            fit: BoxFit.contain,
+                        // Logo with Glass Effect
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              width: 90,
+                              height: 90,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Image.asset(
+                                  'assets/images/logo.png',
+                                  width: 90,
+                                  height: 90,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        // School Name
-                        const Text(
-                          'Elkably',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+     
                       ],
                     ),
                   ),
@@ -232,6 +243,51 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                             ),
                             const SizedBox(height: 12),
+
+                            // Learning Mode Selection (Only for Parent)
+                            if (_selectedRole == UserRole.parent) ...[
+                              Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: inputBgColor,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color:
+                                          inputBorderColor ?? Colors.grey[300]!,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _LearningModeButton(
+                                        label: 'Online',
+                                        icon: Icons.laptop_chromebook,
+                                        isSelected: _learningMode == 'online',
+                                        onTap: () {
+                                          setState(() {
+                                            _learningMode = 'online';
+                                          });
+                                        },
+                                      ),
+                                      const SizedBox(width: 4),
+                                      _LearningModeButton(
+                                        label: 'On Ground',
+                                        icon: Icons.school,
+                                        isSelected: _learningMode == 'onground',
+                                        onTap: () {
+                                          setState(() {
+                                            _learningMode = 'onground';
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
 
                             // Welcome Text
                             Text(
@@ -574,6 +630,63 @@ class _RoleToggleButton extends StatelessWidget {
                         ? Colors.white
                         : (isDark ? Colors.white70 : Colors.grey[600]),
                 fontSize: 15,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Learning Mode Button Widget
+class _LearningModeButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _LearningModeButton({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.elkablyRed : Colors.transparent,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color:
+                  isSelected
+                      ? Colors.white
+                      : (isDark ? Colors.white70 : Colors.grey[600]),
+              size: 15,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color:
+                    isSelected
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : Colors.grey[600]),
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),

@@ -75,6 +75,7 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
     final notifState = ref.watch(notificationsProvider);
     final notifications = notifState.notifications;
     final isDarkMode = ref.watch(isDarkModeProvider);
+    final learningMode = ref.watch(learningModeProvider);
     final unreadCount = notifications.where((n) => n.isNew).length;
 
     return Scaffold(
@@ -100,15 +101,38 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                 child: Column(
                   children: [
-                    const Center(
-                      child: Text(
-                        'Notifications',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
+                    // Title with Logout button (for online mode)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (learningMode == 'online')
+                          const SizedBox(width: 40),
+                        const Expanded(
+                          child: Center(
+                            child: Text(
+                              'Notifications',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                        if (learningMode == 'online')
+                          IconButton(
+                            onPressed: () async {
+                              // Logout
+                              await ref.read(authProvider.notifier).logout();
+                            },
+                            icon: const Icon(
+                              Icons.logout,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            tooltip: 'Logout',
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 16),
 

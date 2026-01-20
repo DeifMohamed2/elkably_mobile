@@ -177,7 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         // Status Card - Combined
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color:
                                 isDarkMode
@@ -204,253 +204,244 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child:
                               lastSession != null
                                   ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      // Attendance Row
+                                      // Date and Time Header
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            DateFormat('EEE, MMM d').format(
+                                              DateTime.parse(lastSession.date),
+                                            ),
+                                            style: TextStyle(
+                                              color:
+                                                  isDarkMode
+                                                      ? Colors.white
+                                                      : AppColors.textPrimaryLight,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (lastSession.time != null &&
+                                              lastSession.time != 'N/A')
+                                            Text(
+                                              () {
+                                                try {
+                                                  final timeParts = lastSession.time!.split(' ');
+                                                  final timeComponents = timeParts[0].split(':');
+                                                  final period = timeParts.length > 1 ? timeParts[1] : '';
+                                                  if (timeComponents.length >= 2) {
+                                                    return '${timeComponents[0]}:${timeComponents[1]} $period';
+                                                  }
+                                                  return lastSession.time!;
+                                                } catch (e) {
+                                                  return lastSession.time!;
+                                                }
+                                              }(),
+                                              style: TextStyle(
+                                                color:
+                                                    isDarkMode
+                                                        ? AppColors.textMuted
+                                                        : AppColors.textMutedLight,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      
+                                      // Attendance Status
                                       Row(
                                         children: [
                                           Container(
-                                            width: 48,
-                                            height: 48,
+                                            width: 24,
+                                            height: 24,
                                             decoration: BoxDecoration(
                                               color: (lastSession.status ==
-                                                              AttendanceStatus
-                                                                  .present ||
+                                                              AttendanceStatus.present ||
                                                           lastSession.status ==
-                                                              AttendanceStatus
-                                                                  .presentFromOtherGroup
+                                                              AttendanceStatus.presentFromOtherGroup
                                                       ? AppColors.success
                                                       : lastSession.status ==
                                                           AttendanceStatus.late
                                                       ? AppColors.warning
                                                       : AppColors.elkablyRed)
-                                                  .withValues(alpha: 0.15),
+                                                  .withValues(alpha: 0.2),
                                               shape: BoxShape.circle,
                                             ),
                                             child: Icon(
                                               lastSession.status ==
-                                                          AttendanceStatus
-                                                              .present ||
+                                                          AttendanceStatus.present ||
                                                       lastSession.status ==
-                                                          AttendanceStatus
-                                                              .presentFromOtherGroup
-                                                  ? Icons
-                                                      .check_circle_outline_rounded
+                                                          AttendanceStatus.presentFromOtherGroup
+                                                  ? Icons.check_circle_outline
                                                   : lastSession.status ==
                                                       AttendanceStatus.late
                                                   ? Icons.schedule
                                                   : Icons.cancel_outlined,
                                               color:
                                                   lastSession.status ==
-                                                              AttendanceStatus
-                                                                  .present ||
+                                                              AttendanceStatus.present ||
                                                           lastSession.status ==
-                                                              AttendanceStatus
-                                                                  .presentFromOtherGroup
+                                                              AttendanceStatus.presentFromOtherGroup
                                                       ? AppColors.success
                                                       : lastSession.status ==
                                                           AttendanceStatus.late
                                                       ? AppColors.warning
                                                       : AppColors.elkablyRed,
-                                              size: 24,
+                                              size: 16,
                                             ),
                                           ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'Attendance',
-                                                  style: TextStyle(
-                                                    color:
-                                                        isDarkMode
-                                                            ? AppColors
-                                                                .textSecondary
-                                                            : AppColors
-                                                                .textSecondaryLight,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            lastSession.status ==
+                                                    AttendanceStatus.present
+                                                ? 'Present'
+                                                : lastSession.status ==
+                                                    AttendanceStatus.late
+                                                ? 'Late'
+                                                : lastSession.status ==
+                                                    AttendanceStatus.presentFromOtherGroup
+                                                ? 'Present (Other Group)'
+                                                : 'Absent',
+                                            style: TextStyle(
+                                              color:
                                                   lastSession.status ==
-                                                          AttendanceStatus
-                                                              .present
-                                                      ? 'Present'
+                                                              AttendanceStatus.present ||
+                                                          lastSession.status ==
+                                                              AttendanceStatus.presentFromOtherGroup
+                                                      ? AppColors.success
                                                       : lastSession.status ==
                                                           AttendanceStatus.late
-                                                      ? 'Late'
-                                                      : lastSession.status ==
-                                                          AttendanceStatus
-                                                              .presentFromOtherGroup
-                                                      ? 'Present (Other)'
-                                                      : 'Absent',
-                                                  style: TextStyle(
-                                                    color:
-                                                        lastSession.status ==
-                                                                    AttendanceStatus
-                                                                        .present ||
-                                                                lastSession
-                                                                        .status ==
-                                                                    AttendanceStatus
-                                                                        .presentFromOtherGroup
-                                                            ? AppColors.success
-                                                            : lastSession
-                                                                    .status ==
-                                                                AttendanceStatus
-                                                                    .late
-                                                            ? AppColors.warning
-                                                            : AppColors
-                                                                .elkablyRed,
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                              ],
+                                                      ? AppColors.warning
+                                                      : AppColors.elkablyRed,
+                                              fontSize: 14,
                                             ),
                                           ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Text(
-                                                DateFormat('MMM d').format(
-                                                  DateTime.parse(
-                                                    lastSession.date,
-                                                  ),
-                                                ),
-                                                style: TextStyle(
-                                                  color:
-                                                      isDarkMode
-                                                          ? AppColors.textMuted
-                                                          : AppColors
-                                                              .textMutedLight,
-                                                  fontSize: 12,
-                                                ),
+                                        ],
+                                      ),
+                                      
+                                      // Homework Status (only if not absent)
+                                      if (lastSession.status != AttendanceStatus.absent) ...[
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                color: (lastSession.homeworkStatus.contains('Submitted') ||
+                                                            lastSession.homeworkStatus.contains('with steps')
+                                                        ? AppColors.success
+                                                        : lastSession.homeworkStatus == 'N/A'
+                                                        ? Colors.grey
+                                                        : AppColors.warning)
+                                                    .withValues(alpha: 0.2),
+                                                shape: BoxShape.circle,
                                               ),
-                                              if (lastSession.time != null &&
-                                                  lastSession.time != 'N/A')
-                                                Text(
-                                                  lastSession.time!,
-                                                  style: TextStyle(
-                                                    color:
-                                                        isDarkMode
-                                                            ? AppColors
-                                                                .textMuted
-                                                            : AppColors
-                                                                .textMutedLight,
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      // Divider
-                                      Divider(
-                                        color:
-                                            isDarkMode
-                                                ? AppColors.borderLight
-                                                    .withValues(alpha: 0.3)
-                                                : AppColors.borderLight,
-                                        height: 1,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      // Homework Row
-                                      Row(
-                                        children: [
-                                          Container(
-                                            width: 48,
-                                            height: 48,
-                                            decoration: BoxDecoration(
-                                              color: (lastSession.homeworkStatus
-                                                              .contains(
-                                                                'Submitted',
-                                                              ) ||
-                                                          lastSession
-                                                              .homeworkStatus
-                                                              .contains(
-                                                                'with steps',
-                                                              )
-                                                      ? AppColors.success
-                                                      : AppColors.warning)
-                                                  .withValues(alpha: 0.15),
-                                              shape: BoxShape.circle,
+                                              child: Icon(
+                                                lastSession.homeworkStatus.contains('Submitted') ||
+                                                        lastSession.homeworkStatus.contains('with steps')
+                                                    ? Icons.check_circle_outline
+                                                    : lastSession.homeworkStatus == 'N/A'
+                                                    ? Icons.remove_circle_outline
+                                                    : Icons.cancel_outlined,
+                                                color:
+                                                    lastSession.homeworkStatus.contains('Submitted') ||
+                                                            lastSession.homeworkStatus.contains('with steps')
+                                                        ? AppColors.success
+                                                        : lastSession.homeworkStatus == 'N/A'
+                                                        ? Colors.grey
+                                                        : AppColors.warning,
+                                                size: 16,
+                                              ),
                                             ),
-                                            child: Icon(
-                                              lastSession.homeworkStatus
-                                                          .contains(
-                                                            'Submitted',
-                                                          ) ||
-                                                      lastSession.homeworkStatus
-                                                          .contains(
-                                                            'with steps',
-                                                          )
-                                                  ? Icons.task_alt_outlined
-                                                  : Icons
-                                                      .pending_actions_outlined,
-                                              color:
-                                                  lastSession.homeworkStatus
-                                                              .contains(
-                                                                'Submitted',
-                                                              ) ||
-                                                          lastSession
-                                                              .homeworkStatus
-                                                              .contains(
-                                                                'with steps',
-                                                              )
-                                                      ? AppColors.success
-                                                      : AppColors.warning,
-                                              size: 24,
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              lastSession.homeworkStatus,
+                                              style: TextStyle(
+                                                color:
+                                                    lastSession.homeworkStatus.contains('Submitted') ||
+                                                            lastSession.homeworkStatus.contains('with steps')
+                                                        ? (isDarkMode
+                                                            ? AppColors.textSecondary
+                                                            : AppColors.textSecondaryLight)
+                                                        : lastSession.homeworkStatus == 'N/A'
+                                                        ? Colors.grey
+                                                        : AppColors.warning,
+                                                fontSize: 14,
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'Homework',
-                                                  style: TextStyle(
-                                                    color:
-                                                        isDarkMode
-                                                            ? AppColors
-                                                                .textSecondary
-                                                            : AppColors
-                                                                .textSecondaryLight,
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  lastSession.homeworkStatus,
-                                                  style: TextStyle(
-                                                    color:
-                                                        lastSession.homeworkStatus
-                                                                    .contains(
-                                                                      'Submitted',
-                                                                    ) ||
-                                                                lastSession
-                                                                    .homeworkStatus
-                                                                    .contains(
-                                                                      'with steps',
-                                                                    )
-                                                            ? AppColors.success
-                                                            : AppColors.warning,
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ],
+                                          ],
+                                        ),
+                                      ],
+                                      
+                                      // Group Info (only if not absent)
+                                      if (lastSession.group != null && lastSession.status != AttendanceStatus.absent) ...[
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                color: AppColors.elkablyRed.withValues(alpha: 0.2),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.group_outlined,
+                                                size: 16,
+                                                color: AppColors.elkablyRed,
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '${lastSession.group!.grade} ${lastSession.group!.gradeType} ${lastSession.group!.groupTime} ${lastSession.group!.displayText}',
+                                              style: TextStyle(
+                                                color:
+                                                    isDarkMode
+                                                        ? AppColors.textSecondary
+                                                        : AppColors.textSecondaryLight,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                      
+                                      // Payment Info (only if not absent)
+                                      if (lastSession.status != AttendanceStatus.absent && lastSession.amountPaid != null) ...[
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                color: AppColors.info.withValues(alpha: 0.2),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.account_balance_wallet_outlined,
+                                                size: 16,
+                                                color: AppColors.info,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'EGP ${lastSession.amountPaid!.toStringAsFixed(2)} Paid',
+                                              style: TextStyle(
+                                                color:
+                                                    isDarkMode
+                                                        ? AppColors.textSecondary
+                                                        : AppColors.textSecondaryLight,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ],
                                   )
                                   : Center(

@@ -99,12 +99,13 @@ class _AppNavigatorState extends ConsumerState<AppNavigator> {
     });
   }
 
-  void _handleLogin(UserRole role, String emailOrPhone, String passwordOrCode) {
+  void _handleLogin(UserRole role, String emailOrPhone, String passwordOrCode, String learningMode) {
     debugPrint('========== MAIN LOGIN HANDLER ==========');
     debugPrint('[MAIN] Login initiated');
     debugPrint('[MAIN] Role: $role');
     debugPrint('[MAIN] Email/Phone: $emailOrPhone');
     debugPrint('[MAIN] Password/Code: $passwordOrCode');
+    debugPrint('[MAIN] Learning Mode: $learningMode');
 
     () async {
       if (role == UserRole.student) {
@@ -144,15 +145,29 @@ class _AppNavigatorState extends ConsumerState<AppNavigator> {
       } else {
         // For parent login, use the API as before
         debugPrint('[MAIN] Parent login - calling API');
-        final success = await ref
-            .read(authProvider.notifier)
-            .loginParent(emailOrPhone, passwordOrCode);
+        
+        // Store learning mode
+        ref.read(learningModeProvider.notifier).state = learningMode;
+        
+        // Use different login endpoint based on learning mode
+        final success = learningMode == 'online'
+            ? await ref
+                .read(authProvider.notifier)
+                .loginParentOnline(emailOrPhone, passwordOrCode)
+            : await ref
+                .read(authProvider.notifier)
+                .loginParent(emailOrPhone, passwordOrCode);
 
         debugPrint('[MAIN] Login completed - Success: $success');
 
         if (success) {
-          debugPrint('[MAIN] ✅ Navigating to Home screen');
-          ref.read(currentScreenProvider.notifier).state = AppScreen.home;
+          debugPrint('[MAIN] ✅ Navigating to appropriate screen');
+          // For online mode, go directly to announcements
+          if (learningMode == 'online') {
+            ref.read(currentScreenProvider.notifier).state = AppScreen.announcements;
+          } else {
+            ref.read(currentScreenProvider.notifier).state = AppScreen.home;
+          }
         } else {
           debugPrint('[MAIN] ❌ Showing error snackbar');
           if (mounted) {
@@ -197,6 +212,7 @@ class _AppNavigatorState extends ConsumerState<AppNavigator> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final currentScreen = ref.watch(currentScreenProvider);
+    final learningMode = ref.watch(learningModeProvider);
 
     // Show loading while checking session
     if (_isLoadingSession) {
@@ -213,7 +229,14 @@ class _AppNavigatorState extends ConsumerState<AppNavigator> {
       return LoginScreen(onLogin: _handleLogin);
     }
 
-    // Show Main App with Bottom Navigation
+    // For Online mode - show only announcements screen (no bottom nav)
+    if (learningMode == 'online') {
+      return const Scaffold(
+        body: AnnouncementsScreen(),
+      );
+    }
+
+    // Show Main App with Bottom Navigation (On Ground mode)
     return Scaffold(
       body: Stack(
         children: [

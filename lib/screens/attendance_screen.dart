@@ -255,17 +255,6 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen>
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${student.grade} • ${student.studentClass}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        height: 1.2,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -469,19 +458,6 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen>
                                               color: Colors.white,
                                               fontSize: 16,
                                               fontWeight: FontWeight.w700,
-                                              height: 1.2,
-                                              decoration: TextDecoration.none,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            '${ref.watch(studentProvider).grade} • ${ref.watch(studentProvider).studentClass}',
-                                            style: TextStyle(
-                                              color: Colors.white.withOpacity(
-                                                0.9,
-                                              ),
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
                                               height: 1.2,
                                               decoration: TextDecoration.none,
                                             ),
@@ -1060,6 +1036,25 @@ class _AttendanceRecordCard extends StatelessWidget {
     final dayName = DateFormat('EEE').format(date);
     final dayNumber = date.day;
     final monthName = DateFormat('MMM').format(date);
+    
+    // Format time to 12-hour format with only hours and minutes
+    String? formattedTime;
+    if (record.time != null && record.time != 'N/A') {
+      try {
+        // Parse the time (assuming format like "5:53:37 PM")
+        final timeParts = record.time!.split(' ');
+        final timeComponents = timeParts[0].split(':');
+        final period = timeParts.length > 1 ? timeParts[1] : '';
+        
+        if (timeComponents.length >= 2) {
+          formattedTime = '${timeComponents[0]}:${timeComponents[1]} $period';
+        } else {
+          formattedTime = record.time;
+        }
+      } catch (e) {
+        formattedTime = record.time;
+      }
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1188,10 +1183,10 @@ class _AttendanceRecordCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (record.time != null && record.time != 'N/A') ...[
+                    if (formattedTime != null) ...[
                       const SizedBox(width: 8),
                       Text(
-                        '• ${record.time}',
+                        '• $formattedTime',
                         style: TextStyle(
                           color:
                               isDarkMode
@@ -1273,6 +1268,39 @@ class _AttendanceRecordCard extends StatelessWidget {
                     ],
                   ),
                 if (record.status != AttendanceStatus.absent)
+                  const SizedBox(height: 8),
+
+                // Group Info (only show if not absent)
+                if (record.group != null && record.status != AttendanceStatus.absent)
+                  Row(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: AppColors.elkablyRed.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.group_outlined,
+                          size: 16,
+                          color: AppColors.elkablyRed,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${record.group!.grade} ${record.group!.gradeType} ${record.group!.groupTime} ${record.group!.displayText}',
+                        style: TextStyle(
+                          color:
+                              isDarkMode
+                                  ? AppColors.textSecondary
+                                  : AppColors.textSecondaryLight,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                if (record.group != null && record.status != AttendanceStatus.absent)
                   const SizedBox(height: 8),
 
                 // Payment Status (only show if not absent)

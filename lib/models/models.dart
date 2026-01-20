@@ -18,6 +18,33 @@ class Student {
 // Attendance Record Model
 enum AttendanceStatus { present, absent, late, presentFromOtherGroup }
 
+// Attendance Group Model
+class AttendanceGroup {
+  final String centerName;
+  final String grade;
+  final String gradeType;
+  final String groupTime;
+  final String displayText;
+
+  const AttendanceGroup({
+    required this.centerName,
+    required this.grade,
+    required this.gradeType,
+    required this.groupTime,
+    required this.displayText,
+  });
+
+  factory AttendanceGroup.fromJson(Map<String, dynamic> json) {
+    return AttendanceGroup(
+      centerName: json['centerName'] as String? ?? '',
+      grade: json['grade'] as String? ?? '',
+      gradeType: json['gradeType'] as String? ?? '',
+      groupTime: json['groupTime'] as String? ?? '',
+      displayText: json['displayText'] as String? ?? '',
+    );
+  }
+}
+
 enum HomeworkStatus { 
   done, // HomeWork submitted with steps
   doneWithoutSteps, // HomeWork submitted without steps
@@ -32,6 +59,7 @@ class AttendanceRecord {
   final HomeworkStatus homeworkStatus;
   final double? amountPaid;
   final double? amountRemaining;
+  final AttendanceGroup? group;
 
   const AttendanceRecord({
     required this.date,
@@ -40,6 +68,7 @@ class AttendanceRecord {
     required this.homeworkStatus,
     this.amountPaid,
     this.amountRemaining,
+    this.group,
   });
 
   factory AttendanceRecord.fromJson(Map<String, dynamic> json) {
@@ -81,6 +110,9 @@ class AttendanceRecord {
       homeworkStatus: hwStatus,
       amountPaid: (json['amountPaid'] as num?)?.toDouble(),
       amountRemaining: (json['amountRemaining'] as num?)?.toDouble(),
+      group: json['group'] != null 
+          ? AttendanceGroup.fromJson(json['group'] as Map<String, dynamic>)
+          : null,
     );
   }
 }
@@ -261,12 +293,18 @@ class DashboardLastSession {
   final AttendanceStatus status;
   final String? time;
   final String homeworkStatus;
+  final double? amountPaid;
+  final double? amountRemaining;
+  final AttendanceGroup? group;
 
   const DashboardLastSession({
     required this.date,
     required this.status,
     this.time,
     required this.homeworkStatus,
+    this.amountPaid,
+    this.amountRemaining,
+    this.group,
   });
 
   factory DashboardLastSession.fromJson(Map<String, dynamic> json) {
@@ -292,6 +330,11 @@ class DashboardLastSession {
       status: status,
       time: json['time'] as String?,
       homeworkStatus: json['homeworkStatus'] as String? ?? 'N/A',
+      amountPaid: (json['amountPaid'] as num?)?.toDouble(),
+      amountRemaining: (json['amountRemaining'] as num?)?.toDouble(),
+      group: json['group'] != null 
+          ? AttendanceGroup.fromJson(json['group'] as Map<String, dynamic>)
+          : null,
     );
   }
 }

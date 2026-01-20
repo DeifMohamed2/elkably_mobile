@@ -102,6 +102,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
           }
         }
 
+        // Restore learning mode
+        final savedLearningMode = prefs.getString('learning_mode');
+        if (savedLearningMode != null) {
+          _ref.read(learningModeProvider.notifier).state = savedLearningMode;
+          debugPrint('[SESSION] ✅ Restored learning mode: $savedLearningMode');
+
+          // Set appropriate screen based on learning mode
+          if (savedLearningMode == 'online') {
+            _ref.read(currentScreenProvider.notifier).state =
+                AppScreen.announcements;
+            debugPrint(
+              '[SESSION] ✅ Set current screen to announcements for online mode',
+            );
+          } else {
+            _ref.read(currentScreenProvider.notifier).state = AppScreen.home;
+            debugPrint(
+              '[SESSION] ✅ Set current screen to home for on ground mode',
+            );
+          }
+        }
+
         state = AuthState(isLoggedIn: true, selectedRole: role, token: token);
         debugPrint('[SESSION] ✅ Session restored');
       } else {
@@ -123,6 +144,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await prefs.setString('selected_role', state.selectedRole!.name);
       }
 
+      // Save learning mode
+      final learningMode = _ref.read(learningModeProvider);
+      await prefs.setString('learning_mode', learningMode);
+
       // Save students data
       final students = _ref.read(studentsProvider);
       final studentsJson = jsonEncode(
@@ -142,6 +167,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       debugPrint('[SESSION] ✅ Session saved');
       debugPrint('[SESSION] isLoggedIn: ${state.isLoggedIn}');
       debugPrint('[SESSION] role: ${state.selectedRole?.name}');
+      debugPrint('[SESSION] learningMode: $learningMode');
       debugPrint('[SESSION] students count: ${students.length}');
     } catch (e) {
       debugPrint('[SESSION] ❌ Error saving session: $e');
@@ -157,6 +183,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await prefs.remove('selected_role');
       await prefs.remove('jwt_token');
       await prefs.remove('students_data');
+      await prefs.remove('learning_mode');
       debugPrint('[SESSION] ✅ Session cleared');
     } catch (e) {
       debugPrint('[SESSION] ❌ Error clearing session: $e');
@@ -166,6 +193,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void selectRole(UserRole role) {
     state = state.copyWith(selectedRole: role);
     _saveSession();
+  }
+
+  Future<bool> loginParentOnline(String phone, String studentCode) async {
+    debugPrint('========== AUTH PROVIDER ONLINE LOGIN ==========');
+    debugPrint(
+      '[PROVIDER] Online login attempt - Phone: $phone, Code: $studentCode',
+    );
+
+    final fcmToken = await FcmHelper.getFcmToken();
+    debugPrint('[PROVIDER] FCM Token retrieved: ${fcmToken ?? "null"}');
+
+    final result = await AuthApiService.loginParentOnline(
+      parentPhone: phone,
+      studentCode: studentCode,
+      fcmToken: fcmToken,
+    );
+
+    debugPrint('[PROVIDER] Online login result - Success: ${result.success}');
+    if (result.success) {
+      debugPrint('[PROVIDER] ✅ Online login successful!');
+      debugPrint('[PROVIDER] Students count: ${result.students.length}');
+      debugPrint('[PROVIDER] Token: ${result.token?.substring(0, 20)}...');
+
+      // Update students list provider
+      _ref.read(studentsProvider.notifier).state = result.students;
+      state = state.copyWith(isLoggedIn: true, token: result.token);
+
+      // Save session
+      await _saveSession();
+
+      debugPrint('[PROVIDER] ✅ State updated - isLoggedIn: true');
+      return true;
+    } else {
+      debugPrint('[PROVIDER] ❌ Online login failed: ${result.message}');
+      return false;
+    }
   }
 
   Future<bool> loginParent(String phone, String studentCode) async {
@@ -203,9 +266,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    debugPrint('========== AUTH PROVIDER LOGOUT ==========');
+
+    // Check if we're in online mode
+    final learningMode = _ref.read(learningModeProvider);
+    debugPrint('[PROVIDER] Learning Mode: $learningMode');
+
+    // Call the appropriate logout API
+    final success =
+        learningMode == 'online'
+            ? await AuthApiService.logoutOnline()
+            : await AuthApiService.logout();
+
+    if (success) {
+      debugPrint('[PROVIDER] ✅ Logout API call successful');
+    } else {
+      debugPrint(
+        '[PROVIDER] ⚠️ Logout API call failed, clearing session anyway',
+      );
+    }
+
     await _clearSession();
     state = const AuthState();
     _ref.read(studentsProvider.notifier).state = mockStudents;
+    _ref.read(learningModeProvider.notifier).state =
+        'onground'; // Reset to default
     debugPrint('[PROVIDER] ✅ Logged out and session cleared');
   }
 }
@@ -217,6 +302,9 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
 
 // Current Screen Provider
 final currentScreenProvider = StateProvider<AppScreen>((ref) => AppScreen.home);
+
+// Learning Mode Provider ('online' or 'onground')
+final learningModeProvider = StateProvider<String>((ref) => 'onground');
 
 // Students List Provider (mutable, defaults to mock data)
 final studentsProvider = StateProvider<List<Student>>((ref) => mockStudents);
@@ -468,7 +556,9 @@ class NotificationsState {
 
 // Notifications Notifier
 class NotificationsNotifier extends StateNotifier<NotificationsState> {
-  NotificationsNotifier() : super(const NotificationsState());
+  final Ref _ref;
+
+  NotificationsNotifier(this._ref) : super(const NotificationsState());
 
   Future<void> fetchNotifications({int page = 1, int limit = 20}) async {
     debugPrint('========== NOTIFICATIONS PROVIDER ==========');
@@ -476,10 +566,19 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
 
     state = state.copyWith(isLoading: true, error: null);
 
-    final result = await NotificationsApiService.getNotifications(
-      page: page,
-      limit: limit,
-    );
+    // Check if we're in online mode
+    final learningMode = _ref.read(learningModeProvider);
+
+    final result =
+        learningMode == 'online'
+            ? await NotificationsApiService.getNotificationsOnline(
+              page: page,
+              limit: limit,
+            )
+            : await NotificationsApiService.getNotifications(
+              page: page,
+              limit: limit,
+            );
 
     debugPrint('[NOTIF_PROVIDER] Result - Success: ${result.success}');
 
@@ -515,7 +614,13 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
       '[NOTIF_PROVIDER] Marking notification as read: $notificationId',
     );
 
-    final success = await NotificationsApiService.markAsRead(notificationId);
+    // Check if we're in online mode
+    final learningMode = _ref.read(learningModeProvider);
+
+    final success =
+        learningMode == 'online'
+            ? await NotificationsApiService.markAsReadOnline(notificationId)
+            : await NotificationsApiService.markAsRead(notificationId);
 
     if (success) {
       debugPrint('[NOTIF_PROVIDER] ✅ Updating local state');
@@ -550,7 +655,13 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     debugPrint('========== MARK ALL NOTIFICATIONS READ PROVIDER ==========');
     debugPrint('[NOTIF_PROVIDER] Marking all notifications as read');
 
-    final success = await NotificationsApiService.markAllAsRead();
+    // Check if we're in online mode
+    final learningMode = _ref.read(learningModeProvider);
+
+    final success =
+        learningMode == 'online'
+            ? await NotificationsApiService.markAllAsReadOnline()
+            : await NotificationsApiService.markAllAsRead();
 
     if (success) {
       debugPrint(
@@ -586,7 +697,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
 // Notifications Provider
 final notificationsProvider =
     StateNotifierProvider<NotificationsNotifier, NotificationsState>((ref) {
-      return NotificationsNotifier();
+      return NotificationsNotifier(ref);
     });
 
 // Helper provider for the list

@@ -83,13 +83,51 @@ class AnnouncementDetailsScreen extends ConsumerWidget {
     }
   }
 
+  // Determine attendance status from description
+  Map<String, dynamic> _getAttendanceInfo() {
+    final desc = notification.description.toLowerCase();
+
+    if (notification.type == NotificationType.attendance) {
+      // Check for "present" or "late" in description
+      if (desc.contains('present')) {
+        return {
+          'icon': Icons.check_circle_outlined,
+          'color': AppColors.success,
+          'label': 'Present',
+        };
+      } else if (desc.contains('late')) {
+        return {
+          'icon': Icons.access_time_outlined,
+          'color': AppColors.warning,
+          'label': 'Late',
+        };
+      }
+      // Default to absent
+      return {
+        'icon': Icons.cancel_outlined,
+        'color': AppColors.elkablyRed,
+        'label': 'Absent',
+      };
+    }
+
+    // For non-attendance notifications, use default
+    return {
+      'icon': _getNotificationIcon(notification.type),
+      'color': _getNotificationColor(notification.type),
+      'label': _getNotificationTypeLabel(notification.type),
+    };
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(isDarkModeProvider);
     final date = DateTime.parse(notification.date);
-    final iconColor = _getNotificationColor(notification.type);
-    final icon = _getNotificationIcon(notification.type);
-    final typeLabel = _getNotificationTypeLabel(notification.type);
+
+    // Get attendance-aware icon, color, and label
+    final attendanceInfo = _getAttendanceInfo();
+    final iconColor = attendanceInfo['color'] as Color;
+    final icon = attendanceInfo['icon'] as IconData;
+    final typeLabel = attendanceInfo['label'] as String;
 
     return Scaffold(
       backgroundColor:
@@ -203,26 +241,17 @@ class AnnouncementDetailsScreen extends ConsumerWidget {
                         const SizedBox(height: 16),
 
                         // Title
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.cancel_outlined, color: iconColor, size: 24),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                notification.title,
-                                style: TextStyle(
-                                  color:
-                                      isDarkMode
-                                          ? Colors.white
-                                          : AppColors.textPrimaryLight,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          notification.title,
+                          style: TextStyle(
+                            color:
+                                isDarkMode
+                                    ? Colors.white
+                                    : AppColors.textPrimaryLight,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),

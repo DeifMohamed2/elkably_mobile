@@ -3,7 +3,7 @@ description: "Elkably - Student Tracking Platform for parents and students to mo
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 
-version: 1.0.2+3
+version: 1.0.3+4
 
 environment:
   sdk: ^3.7.2
@@ -54,8 +54,8 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/images/logo-bg.png"
-  background_color: "#1d1d1d"
-  adaptive_icon_background: "#1d1d1d"
+  background_color: "#ffffff"
+  adaptive_icon_background: "#ffffff"
   adaptive_icon_foreground: "assets/images/logo-bg.png"
   min_sdk_android: 21
   remove_alpha_ios: true
