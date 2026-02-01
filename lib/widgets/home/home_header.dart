@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/models.dart';
 import '../../providers/app_providers.dart';
+import '../../theme/app_theme.dart';
 import 'dart:ui';
 
 class HomeHeader extends ConsumerStatefulWidget {
@@ -284,16 +285,7 @@ class _HomeHeaderState extends ConsumerState<HomeHeader>
     
     return Container(
       decoration: const BoxDecoration(
-        //color: AppColors.elkablyRed,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFE53935), // red-600
-            Color(0xFFEF5350), // red-500
-            Color(0xFFD32F2F), // red-700
-          ],
-        ),
+        color: AppColors.elkablyRed,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),

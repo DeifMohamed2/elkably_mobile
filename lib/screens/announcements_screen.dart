@@ -101,12 +101,24 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                 child: Column(
                   children: [
-                    // Title with Logout button (for online mode)
+                    // Title with Theme Toggle and Logout button (for online mode)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (learningMode == 'online')
-                          const SizedBox(width: 40),
+                          IconButton(
+                            onPressed: () {
+                              ref.read(isDarkModeProvider.notifier).toggleTheme(!isDarkMode);
+                            },
+                            icon: Icon(
+                              isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            tooltip: isDarkMode ? 'Light Mode' : 'Dark Mode',
+                          ),
+                        if (learningMode == 'online')
+                          const SizedBox(width: 8),
                         const Expanded(
                           child: Center(
                             child: Text(
@@ -119,6 +131,8 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
                             ),
                           ),
                         ),
+                        if (learningMode == 'online')
+                          const SizedBox(width: 8),
                         if (learningMode == 'online')
                           IconButton(
                             onPressed: () async {
@@ -424,17 +438,21 @@ class _NotificationCard extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       if (notification.studentName != null)
-                        Text(
-                          '${notification.studentName} (${notification.studentCode})',
-                          style: TextStyle(
-                            color:
-                                isDarkMode
-                                    ? AppColors.textMuted
-                                    : AppColors.textMutedLight,
-                            fontSize: 12,
+                        Expanded(
+                          child: Text(
+                            '${notification.studentName} (${notification.studentCode})',
+                            style: TextStyle(
+                              color:
+                                  isDarkMode
+                                      ? AppColors.textMuted
+                                      : AppColors.textMutedLight,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      const Spacer(),
+                      if (notification.studentName != null)
+                        const SizedBox(width: 8),
                       Text(
                         DateFormat('MMM d, HH:mm').format(date),
                         style: TextStyle(

@@ -349,15 +349,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen>
             // Header with Student Selector
             Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFE53935), // red-600
-                    Color(0xFFEF5350), // red-500
-                    Color(0xFFD32F2F), // red-700
-                  ],
-                ),
+                color: AppColors.elkablyRed,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),

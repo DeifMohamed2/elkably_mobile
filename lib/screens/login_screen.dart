@@ -21,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _passwordController = TextEditingController();
 
   UserRole _selectedRole = UserRole.parent;
-  String _learningMode = 'online'; // 'online' or 'onground'
+  String _learningMode = 'online'; // 'online' or 'center'
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
 
@@ -129,19 +129,11 @@ class _LoginScreenState extends State<LoginScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Top Red Gradient Background
+          // Top Red Solid Background
           Container(
             height: MediaQuery.of(context).size.height * 0.5,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFE53935), // red-600
-                  Color(0xFFEF5350), // red-500
-                  Color(0xFFD32F2F), // red-700
-                ],
-              ),
+              color: AppColors.elkablyRed,
             ),
           ),
           // Content
@@ -273,12 +265,12 @@ class _LoginScreenState extends State<LoginScreen>
                                       ),
                                       const SizedBox(width: 4),
                                       _LearningModeButton(
-                                        label: 'On Ground',
+                                        label: 'Center',
                                         icon: Icons.school,
-                                        isSelected: _learningMode == 'onground',
+                                        isSelected: _learningMode == 'center',
                                         onTap: () {
                                           setState(() {
-                                            _learningMode = 'onground';
+                                            _learningMode = 'center';
                                           });
                                         },
                                       ),
@@ -375,8 +367,8 @@ class _LoginScreenState extends State<LoginScreen>
                               decoration: InputDecoration(
                                 hintText:
                                     _selectedRole == UserRole.parent
-                                        ? '01xxxxxxxxx'
-                                        : 'student@example.com or 01xxxxxxxxx',
+                                        ? 'Enter phone number'
+                                        : 'Enter email or phone',
                                 hintStyle: TextStyle(
                                   color: hintColor,
                                   fontSize: 16,
@@ -468,8 +460,8 @@ class _LoginScreenState extends State<LoginScreen>
                               decoration: InputDecoration(
                                 hintText:
                                     _selectedRole == UserRole.parent
-                                        ? 'K1234'
-                                        : '••••••••',
+                                        ? 'Enter student code'
+                                        : 'Enter password',
                                 hintStyle: TextStyle(
                                   color: hintColor,
                                   fontSize: 16,

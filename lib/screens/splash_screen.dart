@@ -309,7 +309,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               ),
                             ),
 
-                          // Logo
+                          // Logo with optional background
                           Transform.translate(
                             offset: Offset(0, _floatAnimation.value),
                             child: Transform.rotate(
@@ -318,35 +318,46 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 scale: _logoScale.value,
                                 child: Opacity(
                                   opacity: _logoOpacity.value,
-                                  child: Image.asset(
-                                    'assets/images/logo.png',
-                                    width: 192,
-                                    height: 192,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      // Fallback to icon if image not found
-                                      return Container(
-                                        width: 192,
-                                        height: 192,
-                                        decoration: BoxDecoration(
-                                          color:
-                                              isDarkMode
-                                                  ? Colors.white
-                                                  : AppColors.elkablyRed,
-                                          borderRadius: BorderRadius.circular(
-                                            32,
+                                  child: isDarkMode
+                                      ? Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(32),
                                           ),
+                                          child: Image.asset(
+                                            'assets/images/logo.png',
+                                            width: 168,
+                                            height: 168,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Icon(
+                                                Icons.school,
+                                                size: 96,
+                                                color: AppColors.elkablyRed,
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : Image.asset(
+                                          'assets/images/logo.png',
+                                          width: 192,
+                                          height: 192,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              width: 192,
+                                              height: 192,
+                                              decoration: BoxDecoration(
+                                                color: AppColors.elkablyRed,
+                                                borderRadius: BorderRadius.circular(32),
+                                              ),
+                                              child: Icon(
+                                                Icons.school,
+                                                size: 96,
+                                                color: Colors.white,
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        child: Icon(
-                                          Icons.school,
-                                          size: 96,
-                                          color:
-                                              isDarkMode
-                                                  ? AppColors.elkablyRed
-                                                  : Colors.white,
-                                        ),
-                                      );
-                                    },
-                                  ),
                                 ),
                               ),
                             ),
@@ -354,45 +365,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ],
                       );
                     },
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Brand Name with letter animations
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(7, (index) {
-                        const letters = ['E', 'L', 'K', 'A', 'B', 'L', 'Y'];
-                        return AnimatedBuilder(
-                          animation: _letterController,
-                          builder: (context, child) {
-                            final animation = _letterAnimations[index];
-                            return Transform.translate(
-                              offset: Offset(0, 50 * (1 - animation.value)),
-                              child: Opacity(
-                                opacity: animation.value.clamp(0.0, 1.0),
-                                child: AnimatedDefaultTextStyle(
-                                  duration: const Duration(milliseconds: 700),
-                                  style: TextStyle(
-                                    color:
-                                        isDarkMode
-                                            ? Colors.white
-                                            : AppColors.elkablyRed,
-                                    fontSize: 48,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 2,
-                                  ),
-                                  child: Text(letters[index]),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      }),
-                    ),
                   ),
 
                   const SizedBox(height: 48),

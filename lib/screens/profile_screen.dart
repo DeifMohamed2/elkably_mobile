@@ -278,6 +278,10 @@ class ProfileScreen extends ConsumerWidget {
                             alpha: isDarkMode ? 0.1 : 0.2,
                           ),
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 2,
+                          ),
                         ),
                         child: Row(
                           children: [
